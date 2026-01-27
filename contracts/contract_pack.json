@@ -1,0 +1,16 @@
+{
+  "repo": "Zeke142/peoplerun-wp-adapter",
+  "ref": "main",
+  "commit_sha": "UNRESOLVED_AT_EMIT",
+  "versions": {
+    "hr": "v1.1",
+    "newsletter": "v1.0",
+    "imagecraft": "v1.0",
+    "ops": "v1.0",
+    "publisher_batch_schema": "v1.0",
+    "registry_schema": "v1.0"
+  },
+  "authority": "PeopleRun OS",
+  "scope": "wordpress_adapter",
+  "ts": "UNSET"
+}

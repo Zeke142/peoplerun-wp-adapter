@@ -1,0 +1,31 @@
+{
+  "run_id": "publisher_2026-01-27T16-23-01-0700",
+  "ts": "2026-01-27T23:23:01Z",
+  "mode": "publish",
+  "status": "ok",
+  "repo": "Zeke142/peoplerun-wp-adapter",
+  "branch": "main",
+
+  "contract_pack": {
+    "path": "contracts/contract_pack.json",
+    "versions": {
+      "hr": "v1.1",
+      "newsletter": "v1.0",
+      "publisher_batch_schema": "v1.0"
+    }
+  },
+
+  "surfaces": [
+    {
+      "title": "PeopleRun OS — How the System Actually Runs",
+      "url": "https://peoplerun.ai/how-the-system-actually-runs/",
+      "canonical_path": "/system_map/surfaces/how-the-system-actually-runs.md"
+    }
+  ],
+
+  "batch_summary": {
+    "steps_total": 6,
+    "steps_ok": 6,
+    "steps_failed": 0
+  }
+}

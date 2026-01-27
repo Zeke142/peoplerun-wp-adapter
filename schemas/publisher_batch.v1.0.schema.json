@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Zeke142/peoplerun-wp-adapter/schemas/publisher_batch.v1.0.schema.json",
+  "title": "PeopleRun Publisher Batch — v1.0",
+  "description": "Schema for a single Publisher Studio batch execution record.",
+  "type": "object",
+  "required": [
+    "run_id",
+    "ts",
+    "mode",
+    "status",
+    "repo",
+    "branch",
+    "contract_pack",
+    "batch_summary"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "description": "Unique identifier for this publish run."
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when the batch completed."
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["publish", "dry-run", "ops"],
+      "description": "Execution mode."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ok", "failed", "partial"],
+      "description": "Overall batch outcome."
+    },
+    "repo": {
+      "type": "string",
+      "description": "GitHub repo used as truth trail."
+    },
+    "branch": {
+      "type": "string",
+      "description": "Git branch targeted."
+    },
+    "contract_pack": {
+      "type": "object",
+      "required": ["path", "versions"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Path to the contract pack in the repo."
+        },
+        "versions": {
+          "type": "object",
+          "description": "Versions of active contracts during execution.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "surfaces": {
+      "type": "array",
+      "description": "Surfaces affected by this batch.",
+      "items": {
+        "type": "object",
+        "required": ["title", "url", "canonical_path"],
+        "properties": {
+          "title": { "type": "string" },
+          "url": { "type": "string", "format": "uri" },
+          "canonical_path": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "batch_summary": {
+      "type": "object",
+      "required": ["steps_total", "steps_ok", "steps_failed"],
+      "properties": {
+        "steps_total": { "type": "integer", "minimum": 0 },
+        "steps_ok": { "type": "integer", "minimum": 0 },
+        "steps_failed": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

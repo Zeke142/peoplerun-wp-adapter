@@ -1,0 +1,31 @@
+{
+  "contract": "Newsletter Canonical Style Contract",
+  "version": "v1.0",
+  "authority": "PeopleRun OS",
+  "series": "Canonical Structure, In Practice",
+  "status": "active",
+  "enforcement": {
+    "level": "fail-closed",
+    "mutation_policy": "frozen"
+  },
+  "required_elements": [
+    "cover_block_present",
+    "body_present",
+    "hr_motif_present"
+  ],
+  "hr": {
+    "must_conform_to": "contracts/hr_style_surface.v1.1.json"
+  },
+  "banned_openers": [
+    "Most people",
+    "Many people",
+    "Everyone",
+    "Too often",
+    "A lot of people"
+  ],
+  "notes": [
+    "Applies to newsletter issues in the Canonical Structure, In Practice series.",
+    "This is the minimal contract: structure + HR compliance + opener ban."
+  ],
+  "ts": "2026-01-27T00:00:00Z"
+}

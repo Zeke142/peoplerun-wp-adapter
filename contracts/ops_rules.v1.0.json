@@ -1,0 +1,56 @@
+{
+  "contract": "OPS Rules",
+  "version": "v1.0",
+  "authority": "PeopleRun OS",
+  "status": "active",
+  "scope": [
+    "wordpress_adapter",
+    "publisher_studio",
+    "runtime_registry"
+  ],
+  "enforcement": {
+    "level": "fail-closed",
+    "mutation_policy": "versioned"
+  },
+  "rules": {
+    "redirects": {
+      "storage": "wp_option",
+      "option_name": "pr_redirect_rules_v1",
+      "type": "301",
+      "preserve_query": true,
+      "notes": [
+        "Redirect rules are evaluated before render.",
+        "Rules must not emit output."
+      ]
+    },
+    "robots": {
+      "storage": "wp_option",
+      "option_name": "pr_robots_rules_v1",
+      "notes": [
+        "Robots directives apply per-path.",
+        "Used to suppress indexing of test or utility pages."
+      ]
+    },
+    "registry_append": {
+      "storage": "filesystem",
+      "format": "jsonl",
+      "policy": "append-only",
+      "locking": "flock_exclusive",
+      "notes": [
+        "No edits or rewrites allowed.",
+        "Each line is a single immutable event."
+      ]
+    }
+  },
+  "forbidden": [
+    "echo or print in OPS paths",
+    "output before headers",
+    "in-place mutation of registry records",
+    "deleting registry entries"
+  ],
+  "notes": [
+    "OPS rules govern system behavior, not content.",
+    "Violations invalidate the operation under fail-closed enforcement."
+  ],
+  "ts": "2026-01-27T00:00:00Z"
+}

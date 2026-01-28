@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Zeke142/peoplerun-wp-adapter/schemas/registry.v1.0.schema.json",
+  "title": "PeopleRun Registry Event — v1.0",
+  "description": "Schema for a single JSONL registry event line (append-only).",
+  "type": "object",
+  "required": ["ts", "kind"],
+  "properties": {
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Event timestamp."
+    },
+    "kind": {
+      "type": "string",
+      "description": "Event kind (surface_register, publish_run, ops_change, etc.)."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Optional publisher run id."
+    },
+    "surface": {
+      "type": "string",
+      "description": "Optional surface key (e.g., how_system_runs)."
+    },
+    "title": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "canonical_path": {
+      "type": "string"
+    },
+    "repo": {
+      "type": "string"
+    },
+    "commit_sha": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

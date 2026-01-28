@@ -1,0 +1,34 @@
+{
+  "contract": "HR Style Surface",
+  "version": "v1.1",
+  "authority": "PeopleRun OS",
+  "scope": [
+    "newsletter_issue",
+    "hard_surface",
+    "system_surface",
+    "social_surface"
+  ],
+  "status": "active",
+  "enforcement": {
+    "level": "fail-closed",
+    "mutation_policy": "frozen"
+  },
+  "required_motif": {
+    "type": "text",
+    "value": "──────── 💎 ────────",
+    "notes": "Flat HR only. Centered. Diamond emoji required."
+  },
+  "forbidden": [
+    "tapered HR variants",
+    "unicode tapered bars",
+    "<hr> HTML tag",
+    "image-based horizontal rules",
+    "partial bars without diamond"
+  ],
+  "notes": [
+    "This contract supersedes all previous HR variants.",
+    "Flat HR is the canonical visual separator across PeopleRun OS.",
+    "Any deviation invalidates the surface under fail-closed enforcement."
+  ],
+  "ts": "2026-01-27T00:00:00Z"
+}

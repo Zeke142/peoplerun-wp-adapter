@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Zeke142/peoplerun-wp-adapter/blob/main/schemas/runtime/execution_report.schema.v1.0.json",
+  "title": "PeopleRun Execution Report Schema v1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ts", "kind", "source", "status", "target", "evidence"],
+  "properties": {
+    "ts": { "type": "string", "description": "ISO-8601 timestamp" },
+    "kind": { "type": "string", "enum": ["execution_report"] },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surface", "host", "actor"],
+      "properties": {
+        "surface": { "type": "string", "description": "e.g. publisher_studio, ops, wp_adapter" },
+        "host": { "type": "string", "description": "site host / domain" },
+        "actor": { "type": "string", "description": "initiator (user/system)" }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ok", "skipped", "failed"]
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "repo", "branch", "path"],
+      "properties": {
+        "owner": { "type": "string" },
+        "repo": { "type": "string" },
+        "branch": { "type": "string" },
+        "path": { "type": "string", "description": "path written under repo" }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["http", "request_id"],
+      "properties": {
+        "http": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code"],
+          "properties": {
+            "code": { "type": "integer" },
+            "message": { "type": "string" }
+          }
+        },
+        "request_id": { "type": "string" }
+      }
+    },
+    "notes": { "type": "string" }
+  }
+}

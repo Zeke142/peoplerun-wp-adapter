@@ -91,6 +91,13 @@ SH
 docker exec -i "$container_name" sh -c 'cat > /tmp/initialize.sh' < initialize.sh
 timeout --kill-after=5 180 docker exec "$container_name" sh /tmp/initialize.sh
 docker exec -i "$container_name" sh -c 'cat > /tmp/rollback.sh' < "$source_dir/rollback.sh"
+docker exec -i "$container_name" sh -c 'cat > /tmp/dn29-no-payment.php' < "$source_dir/dn29-no-payment.php"
+docker exec "$container_name" php84 -l /tmp/dn29-no-payment.php
+docker exec -i "$container_name" sh -c 'cat > /tmp/stage_dn29.py' < "$source_dir/stage_dn29.py"
+docker exec "$container_name" python3 -m py_compile /tmp/stage_dn29.py
+docker exec -i "$container_name" sh -c 'cat > /tmp/prepare-dn29.sh' < "$source_dir/prepare-dn29.sh"
+docker exec "$container_name" sh -n /tmp/prepare-dn29.sh
+echo "PASS: prepared integration syntax only; no DN29 activation or fault phase invoked"
 timeout --kill-after=5 90 docker exec --env O01_CHECKPOINT_SOURCE=BASELINE_NO_DN29 "$container_name" sh /tmp/rollback.sh
 docker exec "$container_name" sh -c 'php84 -c /work/php.ini -d max_execution_time=15 -S 127.0.0.1:8080 -t /work/wp > /work/http.log 2>&1 & echo $! > /run/http.pid'
 cat > verify.py <<'PY'

@@ -38,7 +38,7 @@ jobs:
           curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/private/admit-private.sh" -o .github/o01-private/admit-private.sh
           printf '%s  %s\n' '1f31280ad5e8ca971ff5e9c680eac3dcc9a2f8f2697880ba90b448e75e8013d7' '.github/o01-private/admit-private.sh' | sha256sum -c -
           curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/private/dn29-no-payment.php" -o .github/o01-private/dn29-no-payment.php
-          printf '%s  %s\n' '6afbfcdc84b2b86f6a241c6489847d9b376880df3144fdc0e8d02b1276e47bf4' '.github/o01-private/dn29-no-payment.php' | sha256sum -c -
+          printf '%s  %s\n' '637f927aaffd86e26b4d653051a53af0d427ff7c18baac41ef914d9b48974f46' '.github/o01-private/dn29-no-payment.php' | sha256sum -c -
           private_dir=$(mktemp -d "$RUNNER_TEMP/o01-private.XXXXXX")
           chmod 700 "$private_dir"
           printf 'O01_PRIVATE_DIRECTORY=%s\nO01_PRIVATE_ARCHIVE=%s/dn29.zip\n' "$private_dir" "$private_dir" >> "$GITHUB_ENV"

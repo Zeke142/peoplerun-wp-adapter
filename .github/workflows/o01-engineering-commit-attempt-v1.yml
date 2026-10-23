@@ -21,7 +21,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/o01-engineering-code" "$RUNNER_TEMP/o01-engineering-base"
           python3 - <<'PY'
           import hashlib,json,os,pathlib,urllib.request
-          rev='14d67c841ddbf3a3314fd6980d97e5a8fcb68d59'
+          rev='ee9359a1935700f8068214b26b7f8da7db6245a6'
           root='https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/'+rev+'/.github/o01/'
           dest=pathlib.Path(os.environ['RUNNER_TEMP'])/'o01-engineering-code'
           base=dest.parent/'o01-engineering-base'
@@ -29,7 +29,7 @@ jobs:
               with urllib.request.urlopen(root+remote,timeout=20) as r: data=r.read(1000000)
               assert hashlib.sha256(data).hexdigest()==pin,remote+' digest mismatch'
               target.write_bytes(data)
-          get('engineering/runner.lock.json',dest/'runner.lock.json','3824a316f9b7218d368d01c767c6d684f1c54b4d595ac2ea717404016966263e')
+          get('engineering/runner.lock.json',dest/'runner.lock.json','52b4844c0cfaea81c89451a86856d0f8b05e3888e6776f59b4bf999a17a4e0dc')
           lock=json.loads((dest/'runner.lock.json').read_text())
           get('engineering/sources.lock.json',dest/'sources.lock.json',lock['candidate_lock_sha256'])
           candidate=json.loads((dest/'sources.lock.json').read_text())

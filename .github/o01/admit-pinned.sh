@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+test "${O01_REPOSITORY_VISIBILITY}" = public
+test "${O01_REPOSITORY}" = Zeke142/peoplerun-wp-adapter
+source_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+task_dir=$(mktemp -d)
+container_name=o01-runtime-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}
+cleanup() {
+  docker rm -f "$container_name" >/dev/null 2>&1 || true
+  rm -rf "$task_dir"
+}
+trap cleanup EXIT
+cd "$task_dir"
+python3 "$source_dir/fetch_locked.py" "$source_dir/runtime.lock.json" "$task_dir"
+docker build --quiet --platform linux/amd64 --network none --tag o01-engineering-runtime:"$GITHUB_RUN_ID" .
+image=o01-engineering-runtime:$GITHUB_RUN_ID
+image_size=$(docker image inspect "$image" --format '{{.Size}}')
+test "$((image_size + 384*1024*1024 + 128*1024*1024 + 16*1024*1024 + 8*1024*1024))" -le 1073741824
+docker run -d --name "$container_name" --network none --ipc none --read-only \
+  --env O01_RUN_BINDING="${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT}" --user 10001:10001 --cap-drop ALL --security-opt no-new-privileges:true \
+  --memory 768m --memory-swap 768m --cpus 1 --pids-limit 64 \
+  --log-driver none --ulimit nofile=256:256 --ulimit core=0 \
+  --tmpfs /work:rw,nosuid,nodev,noexec,size=384m,nr_inodes=16000,uid=10001,gid=10001,mode=0700 \
+  --tmpfs /backup:rw,nosuid,nodev,noexec,size=128m,nr_inodes=2000,uid=10001,gid=10001,mode=0700 \
+  --tmpfs /tmp:rw,nosuid,nodev,noexec,size=16m,nr_inodes=1000,uid=10001,gid=10001,mode=0700 \
+  --tmpfs /run:rw,nosuid,nodev,noexec,size=8m,nr_inodes=1000,uid=10001,gid=10001,mode=0700 "$image" >/dev/null
+docker inspect "$container_name" > inspected.json
+python3 - <<'PY'
+import json
+c=json.load(open('inspected.json'))[0]; h=c['HostConfig']
+assert h['NetworkMode']=='none' and h['IpcMode']=='none' and h['ReadonlyRootfs']
+assert h['Memory']==805306368 and h['MemorySwap']==805306368
+assert h['NanoCpus']==1000000000 and h['PidsLimit']==64
+assert h['CapDrop']==['ALL'] and 'no-new-privileges:true' in h['SecurityOpt']
+assert not h['Privileged'] and not h['Binds'] and not h['PortBindings']
+assert c['Config']['User']=='10001:10001'
+assert all(m['Type']=='tmpfs' for m in c['Mounts'])
+print('PASS: runtime has no host bind, socket, published port or privileged access; explicit limits inspected')
+PY
+cat > initialize.sh <<'SH'
+#!/bin/sh
+set -eu
+umask 077
+mkdir -p /work/wp /work/db
+cp -R /opt/wp/. /work/wp/
+cat > /work/php.ini <<'INI'
+memory_limit=128M
+max_execution_time=15
+default_socket_timeout=3
+sendmail_path=/bin/false
+disable_functions=mail,exec,shell_exec,system,passthru,popen,proc_open
+display_errors=Off
+log_errors=On
+error_log=/work/php-error.log
+INI
+if ! mariadb-install-db --no-defaults --tmpdir=/tmp --innodb-buffer-pool-size=32M --innodb-log-file-size=8M --innodb-open-files=128 --datadir=/work/db --auth-root-authentication-method=normal --skip-test-db > /work/db-init.log 2>&1; then tail -n 40 /work/db-init.log; exit 1; fi
+echo "PASS: MariaDB data initialization"
+mariadbd --no-defaults --innodb-open-files=128 --datadir=/work/db --socket=/run/db.sock --pid-file=/run/db.pid --skip-networking --innodb-buffer-pool-size=32M --innodb-log-file-size=8M --max-connections=5 --performance-schema=OFF --tmpdir=/tmp --log-error=/work/db-error.log &
+for i in $(seq 1 60); do
+  if mariadb-admin --socket=/run/db.sock --user=root ping >/dev/null 2>&1; then break; fi
+  sleep 1
+done
+if ! mariadb-admin --socket=/run/db.sock --user=root ping >/dev/null; then tail -n 40 /work/db-error.log; exit 1; fi
+php84 -c /work/php.ini -d max_execution_time=15 <<'PHP'
+<?php
+mysqli_report(MYSQLI_REPORT_ERROR|MYSQLI_REPORT_STRICT);
+$root=new mysqli('localhost','root','','',0,'/run/db.sock');
+$pass=bin2hex(random_bytes(24));
+$root->query('CREATE DATABASE o01_engineering');
+$root->query("CREATE USER 'o01_engineering'@'localhost' IDENTIFIED BY '$pass'");
+$root->query("GRANT ALL PRIVILEGES ON o01_engineering.* TO 'o01_engineering'@'localhost'");
+$cfg="<?php\ndefine('DB_NAME','o01_engineering');\ndefine('DB_USER','o01_engineering');\ndefine('DB_PASSWORD','".$pass."');\ndefine('DB_HOST','localhost:/run/db.sock');\ndefine('DB_CHARSET','utf8mb4');\ndefine('DB_COLLATE','');\n";
+foreach(['AUTH_KEY','SECURE_AUTH_KEY','LOGGED_IN_KEY','NONCE_KEY','AUTH_SALT','SECURE_AUTH_SALT','LOGGED_IN_SALT','NONCE_SALT'] as $key) $cfg.="define('$key','".bin2hex(random_bytes(32))."');\n";
+$cfg.="define('DISABLE_WP_CRON',true);\ndefine('AUTOMATIC_UPDATER_DISABLED',true);\ndefine('WP_HTTP_BLOCK_EXTERNAL',true);\ndefine('DISALLOW_FILE_MODS',true);\ndefine('WP_MEMORY_LIMIT','128M');\ndefine('WP_MAX_MEMORY_LIMIT','128M');\n\$table_prefix='o01s_';\ndefine('ABSPATH',__DIR__.'/');\nrequire_once ABSPATH.'wp-settings.php';\n";
+file_put_contents('/work/wp/wp-config.php',$cfg);
+mkdir('/work/wp/wp-content/mu-plugins',0700,true);
+file_put_contents('/work/wp/wp-content/mu-plugins/o01-engineering-suppression.php',"<?php\nadd_filter('pre_wp_mail',static function(){return true;});\nadd_filter('pre_http_request',static function(){return new WP_Error('o01_no_egress','External requests denied');});\n");
+PHP
+php84 -c /work/php.ini -d max_execution_time=15 <<'PHP'
+<?php
+define('WP_INSTALLING',true);
+require '/work/wp/wp-load.php';
+require_once ABSPATH.'wp-admin/includes/upgrade.php';
+wp_install('O01 isolated engineering runtime','engineering_admin','engineering@example.invalid',true,'',bin2hex(random_bytes(32)));
+update_option('siteurl','http://127.0.0.1:8080');
+update_option('home','http://127.0.0.1:8080');
+echo "PASS: real WordPress schema installed on MariaDB, no imported production data\n";
+PHP
+# HTTP stays stopped until the paired rollback drill passes.
+SH
+docker exec -i "$container_name" sh -c 'cat > /tmp/initialize.sh' < initialize.sh
+timeout --kill-after=5 180 docker exec "$container_name" sh /tmp/initialize.sh
+docker exec -i "$container_name" sh -c 'cat > /tmp/rollback.sh' < "$source_dir/rollback.sh"
+timeout --kill-after=5 90 docker exec --env O01_CHECKPOINT_SOURCE=BASELINE_NO_DN29 "$container_name" sh /tmp/rollback.sh
+docker exec "$container_name" sh -c 'php84 -c /work/php.ini -d max_execution_time=15 -S 127.0.0.1:8080 -t /work/wp > /work/http.log 2>&1 & echo $! > /run/http.pid'
+cat > verify.py <<'PY'
+import json,os,socket,subprocess,pathlib
+assert os.getuid()==10001
+lock=json.loads(pathlib.Path('/opt/runtime.lock.json').read_text())
+installed=sorted(subprocess.check_output(['apk','info','-v'],text=True).splitlines())
+assert installed==sorted(lock['installed_packages']), 'Installed package inventory drift'
+assert pathlib.Path('/run/o01-rollback-proof.json').is_file()
+for path in ['/var/run/docker.sock','/workspace','/home/runner','/etc/siteground']:
+    assert not os.path.exists(path),path
+try:
+    open('/o01-readonly-proof','w').write('fail')
+    raise AssertionError('root filesystem writable')
+except OSError: pass
+assert sorted(os.listdir('/sys/class/net'))==['lo']
+for family,target in [(socket.AF_INET,('1.1.1.1',443)),(socket.AF_INET,('1.1.1.1',25)),(socket.AF_INET6,('2606:4700:4700::1111',443))]:
+    with socket.socket(family,socket.SOCK_STREAM) as s:
+        s.settimeout(2)
+        assert s.connect_ex(target)!=0
+assert pathlib.Path('/sys/fs/cgroup/memory.max').read_text().strip()=='805306368'
+assert pathlib.Path('/sys/fs/cgroup/pids.max').read_text().strip()=='64'
+assert pathlib.Path('/sys/fs/cgroup/cpu.max').read_text().strip()=='100000 100000'
+assert 'NoNewPrivs:\t1' in pathlib.Path('/proc/self/status').read_text()
+mounts=pathlib.Path('/proc/mounts').read_text().splitlines()
+assert not any(x.split()[1]=='/dev/shm' for x in mounts)
+for name,maxbytes,maxinodes in [('/work',384*1024**2,16000),('/backup',128*1024**2,2000),('/tmp',16*1024**2,1000),('/run',8*1024**2,1000)]:
+    row=next(x for x in mounts if x.split()[1]==name)
+    assert row.split()[2]=='tmpfs'
+    fs=os.statvfs(name)
+    assert fs.f_blocks*fs.f_frsize<=maxbytes and fs.f_files<=maxinodes
+    assert all(x in row.split()[3].split(',') for x in ['nosuid','nodev','noexec'])
+print('PASS: filesystem isolation, IPv4/IPv6 outbound denial and kernel memory/CPU/PID/storage/inode limits')
+PY
+docker exec -i "$container_name" sh -c 'cat > /tmp/verify.py' < verify.py
+timeout --kill-after=5 30 docker exec "$container_name" python3 /tmp/verify.py
+cat > verify.php <<'PHP'
+<?php
+require '/work/wp/wp-load.php';
+global $wpdb,$wp_version;
+if(!is_blog_installed() || (int)$wpdb->get_var('SELECT 1')!==1) exit(1);
+if(ini_get('memory_limit')!=='128M' || (int)ini_get('max_execution_time')!==15) exit(2);
+if(function_exists('mail')) exit(3);
+if(!is_wp_error(wp_remote_get('https://example.invalid'))) exit(4);
+echo json_encode(['wordpress'=>$wp_version,'database'=>$wpdb->get_var('SELECT VERSION()'),'php'=>PHP_VERSION,'php_memory'=>ini_get('memory_limit'),'php_execution_seconds'=>ini_get('max_execution_time'),'dn29_loaded'=>false,'g3_enabled'=>false,'payment_processed'=>false],JSON_PRETTY_PRINT)."\n";
+PHP
+docker exec -i "$container_name" sh -c 'cat > /tmp/verify.php' < verify.php
+timeout --kill-after=5 30 docker exec "$container_name" php84 -c /work/php.ini -d max_execution_time=15 /tmp/verify.php
+for n in $(seq 1 10); do
+  if docker exec "$container_name" curl -fsS --max-time 3 http://127.0.0.1:8080/ -o /tmp/home.html; then break; fi
+  sleep 1
+done
+docker exec "$container_name" test -s /tmp/home.html
+if docker exec "$container_name" php84 -c /work/php.ini -d max_execution_time=15 -r 'str_repeat("a",140*1024*1024);' >/dev/null 2>&1; then
+  echo 'FAIL: PHP allocation exceeded 128M'; exit 1
+fi
+echo 'PASS: WordPress loopback HTTP, actual DB readback and PHP over-limit allocation rejected'
+docker exec "$container_name" python3 -c 'import json; print("Pinned WordPress SHA256:",json.load(open("/opt/runtime.lock.json"))["wordpress"]["sha256"])'
+docker image inspect "$image" --format 'Runtime image identity: {{.Id}}; size bytes: {{.Size}}'
+printf 'O01_PINNED_RUNTIME_ROLLBACK_ADMISSION_PASS run=%s attempt=%s commit=%s scope=ephemeral-no-payment-runtime-only\n' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA"
+echo 'Runtime is destroyed at job end; no persistent endpoint, DN29 execution, G3 or production receipt is claimed.'

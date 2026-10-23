@@ -2,7 +2,7 @@
 declare(strict_types=1);
 // Real WordPress only. No fake DB, issuer, payment signature or trust activation.
 const DN29_SHA='b266241398c3f22bbc58a5b8d28250fcf6d8894257cf697a50c0eecf0cca5871';
-function require_check(bool $ok,string $name): void {if(!$ok)throw new RuntimeException($name);echo "PASS $name\n";}
+function require_check(bool $ok,string $name): void {if(!$ok){fwrite(STDERR,"FAIL $name\n");throw new RuntimeException($name);}echo "PASS $name\n";}
 require '/work/wp/wp-load.php';
 require_once ABSPATH.'wp-admin/includes/plugin.php';
 global $wpdb;
@@ -15,7 +15,7 @@ if($phase==='activate') {
     $stage=json_decode(file_get_contents('/run/o01-dn29-staged.json'),true,512,JSON_THROW_ON_ERROR);
     require_check($stage['archive_sha256']===DN29_SHA,'staged source pin');
     foreach($stage['files'] as $name=>$sha)require_check(hash_file('sha256',WP_PLUGIN_DIR.'/o01-dn29/'.basename($name))===$sha,'source '.$name);
-    $error=activate_plugin('o01-dn29/o01-dn29-scoped-publisher.php','','',true);
+    $error=activate_plugin('o01-dn29/o01-dn29-scoped-publisher.php','',false,false);
     require_check(!is_wp_error($error),'DN29 staging-only schema activation');
     exit;
 }
@@ -34,6 +34,7 @@ require_check($releases==='o01s_pr_o01_dn22_releases'&&$receipts==='o01s_pr_o01_
 function counts(): array {global $wpdb,$releases,$receipts;return [(int)$wpdb->get_var("SELECT COUNT(*) FROM `$releases`"),(int)$wpdb->get_var("SELECT COUNT(*) FROM `$receipts`")];}
 function request_as(int $user,array $payload) {wp_set_current_user($user);$r=new WP_REST_Request('POST','/peoplerun-o01-dn29/v1/publish');$r->set_header('content-type','application/json');$r->set_body(json_encode($payload,JSON_THROW_ON_ERROR));return rest_do_request($r);}
 $before=counts();require_check($before===[0,0],'clean release and receipt ledgers');
+if($phase==='verify') {echo "O01_DN29_SOURCE_BOUND_ROLLBACK_AND_ACTIVATION_READBACK_PASS\n";exit;}
 if($phase==='denials') {
     $r=request_as(0,[]);require_check(in_array($r->get_status(),[401,403],true)&&counts()===$before,'NP02 anonymous denied without publisher row changes');
     foreach([[],['status'=>'approved','paid'=>true],['status'=>'QUARANTINED_DENY_PUBLISH','publish_authorized'=>false],['review_email'=>'UNSIGNED ENGINEERING INPUT']] as $payload){

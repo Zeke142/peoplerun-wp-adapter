@@ -1,0 +1,13 @@
+{
+  "schema": "peoplerun.engineering.sources.v1",
+  "original_archive_sha256": "b266241398c3f22bbc58a5b8d28250fcf6d8894257cf697a50c0eecf0cca5871",
+  "generated_sha256": "0e899ee34276ee1a039672c9b26efbe6f35aaf6224f10eb69b1503f5057726ed",
+  "runtime_lock_sha256": "a9bc369600d834e04aedf1e1812d5ce91f686045d3cf450a1f2754d80407caed",
+  "files": {
+    "generate.py": "a8b5d560db2553995f826114fd11cd2c8c66854bf54ca905c4a4bbf9f3a42ea6",
+    "harness.php": "d85b7d949fb409e1d49ec508eac03088fd52a657edf17cf125633de470ba566a",
+    "run.py": "417408dbb99009e69c9f36b41a9024f9eeec7aabcc9d630383e561a8b0ccbbfb",
+    "test_generate.py": "dd1f438ca5d270a3177b296f9a1c32a9083fe66aed144cd6d36e4d63e37c352b",
+    "README.md": "5f9027c7b114c02dda76d617bb2216ff4deea787045074cbca71f78eb04a0c0b"
+  }
+}

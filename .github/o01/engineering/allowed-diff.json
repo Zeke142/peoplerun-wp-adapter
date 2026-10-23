@@ -1,0 +1,19 @@
+{
+  "schema": "peoplerun.engineering.allowed-diff.v1",
+  "original_archive_sha256": "b266241398c3f22bbc58a5b8d28250fcf6d8894257cf697a50c0eecf0cca5871",
+  "source_sha256": {
+    "src/o01-dn29-scoped-publisher.php": "878fbdb3a270295a5c91303ee964362343a1347c611c83417b71b79ec8a26165",
+    "src/o01-receipt-admission-dn25.php": "518713101c1ba430056d79b75e0f9e71a98ebb2051003c27ed2a8d108acd3be8"
+  },
+  "generated_sha256": "0e899ee34276ee1a039672c9b26efbe6f35aaf6224f10eb69b1503f5057726ed",
+  "inverse_checks": {
+    "publisher_body": true,
+    "atomic_body": true
+  },
+  "allowed_changes": [
+    "post-trust CLI entry with synthetic identifiers",
+    "atomic entry identifiers replaced; transaction body retained",
+    "renamed engineering result state"
+  ],
+  "classification": "SOURCE_EQUIVALENCE_ONLY_RUNTIME_UNEXECUTED"
+}

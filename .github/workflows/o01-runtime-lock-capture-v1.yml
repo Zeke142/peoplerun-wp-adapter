@@ -1,4 +1,4 @@
-name: O01 capture dependency identities
+name: SUPERSEDED - dependency identity capture
 on:
   push:
     branches: [o01-isolated-runtime-admission-v1]
@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   capture:
-    if: github.event.repository.visibility == 'public'
+    if: ${{ false }} # Superseded by pinned runtime/rollback workflow
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:

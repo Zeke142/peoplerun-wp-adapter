@@ -2,7 +2,7 @@
 declare(strict_types=1);
 // Real WordPress only. No fake DB, issuer, payment signature or trust activation.
 const DN29_SHA='b266241398c3f22bbc58a5b8d28250fcf6d8894257cf697a50c0eecf0cca5871';
-function require_check(bool $ok,string $name): void {if(!$ok)throw new RuntimeException($name);echo "PASS $name\n";}
+function require_check(bool $ok,string $name): void {if(!$ok){fwrite(STDERR,"FAIL $name\n");throw new RuntimeException($name);}echo "PASS $name\n";}
 require '/work/wp/wp-load.php';
 require_once ABSPATH.'wp-admin/includes/plugin.php';
 global $wpdb;
@@ -15,7 +15,7 @@ if($phase==='activate') {
     $stage=json_decode(file_get_contents('/run/o01-dn29-staged.json'),true,512,JSON_THROW_ON_ERROR);
     require_check($stage['archive_sha256']===DN29_SHA,'staged source pin');
     foreach($stage['files'] as $name=>$sha)require_check(hash_file('sha256',WP_PLUGIN_DIR.'/o01-dn29/'.basename($name))===$sha,'source '.$name);
-    $error=activate_plugin('o01-dn29/o01-dn29-scoped-publisher.php','','',true);
+    $error=activate_plugin('o01-dn29/o01-dn29-scoped-publisher.php','',false,false);
     require_check(!is_wp_error($error),'DN29 staging-only schema activation');
     exit;
 }

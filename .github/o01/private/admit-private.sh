@@ -177,7 +177,11 @@ if test -n "${O01_PRIVATE_ARCHIVE:-}"; then
     test "${O01_RUN_DENIAL_TESTS:-0}" = 1
     timeout --kill-after=5 60 docker exec -e O01_ALLOW_FAULT_TESTS=1 "$container_name" php84 -c /work/php.ini -d max_execution_time=15 /tmp/dn29-no-payment.php faults
   fi
-  echo 'Reader phase unexecuted' 
+  if test "${O01_RUN_READER_TESTS:-0}" = 1; then
+    test "${O01_RUN_DENIAL_TESTS:-0}" = 1
+    docker exec "$container_name" sh -c 'php84 -c /work/php.ini -d max_execution_time=15 -S 127.0.0.1:8080 -t /work/wp > /work/http.log 2>&1 & echo $! > /run/http.pid'
+    timeout --kill-after=5 60 docker exec -e O01_ALLOW_READER_FIXTURES=1 "$container_name" php84 -c /work/php.ini -d max_execution_time=15 /tmp/dn29-no-payment.php reader
+  fi
 fi
 
 printf 'O01_PINNED_RUNTIME_ROLLBACK_ADMISSION_PASS run=%s attempt=%s commit=%s scope=ephemeral-no-payment-runtime-only\n' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA"

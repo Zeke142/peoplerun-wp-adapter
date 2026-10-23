@@ -33,7 +33,7 @@ jobs:
           cd "$task_dir"
           cat > Dockerfile <<'DOCKERFILE'
           FROM alpine:3.22
-          RUN apk add --no-cache php84 php84-mysqli php84-mbstring php84-curl php84-session php84-openssl php84-phar php84-tokenizer php84-xml php84-dom php84-iconv php84-zip mariadb mariadb-client curl tar python3 && adduser -D -u 10001 runtime
+          RUN apk add --no-cache php84 php84-ctype php84-fileinfo php84-simplexml php84-mysqli php84-mbstring php84-curl php84-session php84-openssl php84-phar php84-tokenizer php84-xml php84-dom php84-iconv php84-zip mariadb mariadb-client curl tar python3 && adduser -D -u 10001 runtime
           RUN curl --fail --silent --show-error --location https://wordpress.org/latest.tar.gz -o /tmp/wordpress.tar.gz && mkdir /opt/wp && tar -xzf /tmp/wordpress.tar.gz --strip-components=1 -C /opt/wp && sha256sum /tmp/wordpress.tar.gz > /opt/wordpress-archive.sha256 && rm /tmp/wordpress.tar.gz
           USER 10001:10001
           CMD ["sleep","1800"]
@@ -68,7 +68,7 @@ jobs:
           set -eu
           umask 077
           mkdir -p /work/wp /work/db
-          cp -a /opt/wp/. /work/wp/
+          cp -R /opt/wp/. /work/wp/
           cat > /work/php.ini <<'INI'
           memory_limit=128M
           max_execution_time=15

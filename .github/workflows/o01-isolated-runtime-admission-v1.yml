@@ -113,7 +113,7 @@ jobs:
           PHP
           php84 -c /work/php.ini -S 127.0.0.1:8080 -t /work/wp > /work/http.log 2>&1 &
           SH
-          docker cp initialize.sh "$container_name":/tmp/initialize.sh
+          docker exec -i "$container_name" sh -c 'cat > /tmp/initialize.sh' < initialize.sh
           timeout --kill-after=5 180 docker exec "$container_name" sh /tmp/initialize.sh
           cat > verify.py <<'PY'
           import json,os,socket,subprocess,pathlib
@@ -142,7 +142,7 @@ jobs:
               assert all(x in row.split()[3].split(',') for x in ['nosuid','nodev','noexec'])
           print('PASS: filesystem isolation, IPv4/IPv6 outbound denial and kernel memory/CPU/PID/storage/inode limits')
           PY
-          docker cp verify.py "$container_name":/tmp/verify.py
+          docker exec -i "$container_name" sh -c 'cat > /tmp/verify.py' < verify.py
           timeout --kill-after=5 30 docker exec "$container_name" python3 /tmp/verify.py
           cat > verify.php <<'PHP'
           <?php
@@ -154,7 +154,7 @@ jobs:
           if(!is_wp_error(wp_remote_get('https://example.invalid'))) exit(4);
           echo json_encode(['wordpress'=>$wp_version,'database'=>$wpdb->get_var('SELECT VERSION()'),'php'=>PHP_VERSION,'php_memory'=>ini_get('memory_limit'),'php_execution_seconds'=>ini_get('max_execution_time'),'dn29_loaded'=>false,'g3_enabled'=>false,'payment_processed'=>false],JSON_PRETTY_PRINT)."\n";
           PHP
-          docker cp verify.php "$container_name":/tmp/verify.php
+          docker exec -i "$container_name" sh -c 'cat > /tmp/verify.php' < verify.php
           timeout --kill-after=5 30 docker exec "$container_name" php84 -c /work/php.ini /tmp/verify.php
           for n in $(seq 1 10); do
             if docker exec "$container_name" curl -fsS --max-time 3 http://127.0.0.1:8080/ -o /tmp/home.html; then break; fi

@@ -79,13 +79,14 @@ jobs:
           log_errors=On
           error_log=/work/php-error.log
           INI
-          mariadb-install-db --datadir=/work/db --auth-root-authentication-method=normal --skip-test-db > /work/db-init.log 2>&1
+          if ! mariadb-install-db --datadir=/work/db --auth-root-authentication-method=normal --skip-test-db > /work/db-init.log 2>&1; then tail -n 40 /work/db-init.log; exit 1; fi
+          echo "PASS: MariaDB data initialization"
           mariadbd --datadir=/work/db --socket=/run/db.sock --pid-file=/run/db.pid --skip-networking --innodb-buffer-pool-size=32M --innodb-log-file-size=8M --max-connections=5 --performance-schema=OFF --tmpdir=/tmp --log-error=/work/db-error.log &
           for i in $(seq 1 60); do
             if mariadb-admin --socket=/run/db.sock --user=root ping >/dev/null 2>&1; then break; fi
             sleep 1
           done
-          mariadb-admin --socket=/run/db.sock --user=root ping >/dev/null
+          if ! mariadb-admin --socket=/run/db.sock --user=root ping >/dev/null; then tail -n 40 /work/db-error.log; exit 1; fi
           php84 -c /work/php.ini <<'PHP'
           <?php
           mysqli_report(MYSQLI_REPORT_ERROR|MYSQLI_REPORT_STRICT);

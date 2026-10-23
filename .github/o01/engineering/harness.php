@@ -64,6 +64,12 @@ class EngineeringDB {
 }
 $action=$argv[1]??'';$path=$dir.'/fixture.json';
 if($action==='fixture'){ec_write('fixture.json',ec_fixture($argv[2]??'base'));ec_emit(['created'=>true]);exit;}
+if($action==='observe'){
+    $wpdb->query('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED');$wpdb->query('SET autocommit=1');
+    $rows=$wpdb->get_results("SELECT * FROM `$r` ORDER BY id",ARRAY_A);$receipts=$wpdb->get_results("SELECT * FROM `$l` ORDER BY id",ARRAY_A);
+    ec_assert(is_array($rows)&&is_array($receipts)&&$wpdb->last_error==='','observer_query');
+    ec_emit(['releases'=>$rows,'receipts'=>$receipts]);exit;
+}
 $f=json_decode(file_get_contents($path),true,512,JSON_THROW_ON_ERROR);$m=$f['manifest'];
 if($action==='worker'){
     $real=$wpdb;$wpdb=new EngineeringDB($real,$argv[2]??'none',($argv[3]??'')==='hold');
@@ -74,12 +80,6 @@ if($action==='atomic'){
     $proxy=new EngineeringDB($wpdb,'none',false);$called=false;
     $v=o01_eng_atomic($proxy,$f['ids'],static function()use(&$called){$called=true;return false;});
     ec_emit(['atomic'=>$v,'callback_reached'=>$called,'insert_errno'=>$proxy->insertErrno]);exit;
-}
-if($action==='observe'){
-    $wpdb->query('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED');$wpdb->query('SET autocommit=1');
-    $rows=$wpdb->get_results("SELECT * FROM `$r` ORDER BY id",ARRAY_A);$receipts=$wpdb->get_results("SELECT * FROM `$l` ORDER BY id",ARRAY_A);
-    ec_assert(is_array($rows)&&is_array($receipts)&&$wpdb->last_error==='','observer_query');
-    ec_emit(['releases'=>$rows,'receipts'=>$receipts]);exit;
 }
 if($action==='reset'){
     // Refuse broad cleanup if anything is outside this run's synthetic fixture family.

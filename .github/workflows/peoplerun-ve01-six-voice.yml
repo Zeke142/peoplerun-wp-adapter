@@ -26,12 +26,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -m pip install --disable-pip-version-check piper-tts==1.8.0
-          # Avoid unbounded apt index refresh on hosted runners.
-          # Require existing FFmpeg tools; fail closed if the image lacks them.
-          command -v ffmpeg >/dev/null 2>&1 || { echo 'FFmpeg unavailable on runner image'; exit 1; }
-          command -v ffprobe >/dev/null 2>&1 || { echo 'FFprobe unavailable on runner image'; exit 1; }
-          ffmpeg -version
+          timeout 120s python -m pip install --disable-pip-version-check piper-tts==1.8.0
+          # Bundled FFmpeg from pinned platform-specific wheel (no apt operations).
+          timeout 120s python -m pip install --only-binary=:all: --disable-pip-version-check imageio-ffmpeg==0.6.0
+          FFMPEG_BINARY="$(python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')"
+          test -x "$FFMPEG_BINARY"
+          ln -s "$FFMPEG_BINARY" "$RUNNER_TEMP/ffmpeg"
+          export PATH="$RUNNER_TEMP:$PATH"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+          ffmpeg -hide_banner -version
       - name: Download six voice candidates
         shell: bash
         run: |
@@ -66,7 +69,16 @@ jobs:
           for file in output/*_normalized.wav; do printf "file '%s'\n" "$(basename "$file")"; done > output/concat.txt
           ffmpeg -hide_banner -loglevel error -y -f concat -safe 0 -i output/concat.txt -codec:a libmp3lame -qscale:a 4 output/PeopleRun_VE01_six_voice.mp3
           test -s output/PeopleRun_VE01_six_voice.mp3
-          ffprobe -v error -show_entries format=duration,size -of json output/PeopleRun_VE01_six_voice.mp3 > output/audio_probe.json
+          # Validate the MP3 via FFmpeg decoding (the wheel has no separate probe binary).
+          python - <<'PY'
+          import json, pathlib, subprocess
+          audio = pathlib.Path('output/PeopleRun_VE01_six_voice.mp3')
+          cmd = ['ffmpeg', '-hide_banner', '-nostats', '-loglevel', 'error', '-progress', 'pipe:1', '-i', str(audio), '-f', 'null', '-']
+          result = subprocess.run(cmd, capture_output=True, text=True, timeout=90, check=True)
+          durations = [int(line.split('=', 1)[1]) for line in result.stdout.splitlines() if line.startswith('out_time_us=')]
+          assert durations and max(durations) > 0, 'No decoded audio duration'
+          pathlib.Path('output/audio_probe.json').write_text(json.dumps({'format': {'duration': max(durations) / 1000000, 'size': audio.stat().st_size}, 'decode_verified': True}, indent=2) + '\n')
+          PY
           sha256sum output/PeopleRun_VE01_six_voice.mp3 > output/SHA256SUMS
       - name: Upload generated listening artifact
         uses: actions/upload-artifact@v4

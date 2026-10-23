@@ -30,7 +30,7 @@ jobs:
           curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/rollback.sh" -o .github/o01/rollback.sh
           printf '%s  %s\n' 'd8537069d92bd71f8a22885048a1e79c75de75d9b46f1701d591dc4729105e01' '.github/o01/rollback.sh' | sha256sum -c -
           curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/admit-pinned.sh" -o .github/o01/admit-pinned.sh
-          printf '%s  %s\n' '5efdd358ec10c1b68a5692a3e3e8d6abd0566fe29a76d5bdeb676496e7930391' '.github/o01/admit-pinned.sh' | sha256sum -c -
+          printf '%s  %s\n' '7ba0bb9d0b83294cd02f1dadbf3f0e4fa79a3901743f9208cda2894601f5528e' '.github/o01/admit-pinned.sh' | sha256sum -c -
           curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/stage_dn29.py" -o .github/o01/stage_dn29.py
           printf '%s  %s\n' 'ab98ba861581243195077d33c6e43891878b7b0602d00cb65d3032e2789f1c36' '.github/o01/stage_dn29.py' | sha256sum -c -
           curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/dn29-no-payment.php" -o .github/o01/dn29-no-payment.php

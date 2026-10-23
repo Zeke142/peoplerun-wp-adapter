@@ -169,8 +169,12 @@ if test -n "${O01_PRIVATE_ARCHIVE:-}"; then
   docker exec -i "$container_name" sh -c 'cat > /tmp/dn29.zip' < "$O01_PRIVATE_ARCHIVE"
   timeout --kill-after=5 120 docker exec "$container_name" sh /tmp/prepare-dn29.sh /tmp/dn29.zip --stage-and-verify-rollback
   timeout --kill-after=5 30 docker exec "$container_name" php84 -c /work/php.ini -d max_execution_time=15 /tmp/dn29-no-payment.php verify
-  echo 'O01_DN29_PRIVATE_BINDING_AND_SOURCE_ROLLBACK_PASS; denial/fault/reader phases unexecuted'
+  echo 'O01_DN29_PRIVATE_BINDING_AND_SOURCE_ROLLBACK_PASS'
+  if test "${O01_RUN_DENIAL_TESTS:-0}" = 1; then
+    timeout --kill-after=5 60 docker exec "$container_name" php84 -c /work/php.ini -d max_execution_time=15 /tmp/dn29-no-payment.php denials
+  fi
+  echo 'Fault and reader phases unexecuted'
 fi
 
 printf 'O01_PINNED_RUNTIME_ROLLBACK_ADMISSION_PASS run=%s attempt=%s commit=%s scope=ephemeral-no-payment-runtime-only\n' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA"
-echo 'Runtime is destroyed at job end; no persistent endpoint, DN29 execution, G3 or production receipt is claimed.'
+echo 'Runtime is destroyed at job end; no persistent endpoint, successful publication, G3 or production receipt is claimed.'

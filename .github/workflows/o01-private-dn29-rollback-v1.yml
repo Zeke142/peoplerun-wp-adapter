@@ -36,16 +36,17 @@ jobs:
           curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/private/private_receive.py" -o .github/o01-private/private_receive.py
           printf '%s  %s\n' '39ca8b808ca2ed85b8e2f8e5cf1feba15fad613bef95b4d4481797c48dc21d3e' '.github/o01-private/private_receive.py' | sha256sum -c -
           curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/private/admit-private.sh" -o .github/o01-private/admit-private.sh
-          printf '%s  %s\n' '3795b52de5676164d8db91baf331ccb4c9874a6cec073fcdaf25b559398cd8a5' '.github/o01-private/admit-private.sh' | sha256sum -c -
+          printf '%s  %s\n' '6eddc21ab3fb47a606362d3daa0398495ddd368bb1102d4931c8a1fbd93521ac' '.github/o01-private/admit-private.sh' | sha256sum -c -
           curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/private/dn29-no-payment.php" -o .github/o01-private/dn29-no-payment.php
           printf '%s  %s\n' '637f927aaffd86e26b4d653051a53af0d427ff7c18baac41ef914d9b48974f46' '.github/o01-private/dn29-no-payment.php' | sha256sum -c -
           private_dir=$(mktemp -d "$RUNNER_TEMP/o01-private.XXXXXX")
           chmod 700 "$private_dir"
           printf 'O01_PRIVATE_DIRECTORY=%s\nO01_PRIVATE_ARCHIVE=%s/dn29.zip\n' "$private_dir" "$private_dir" >> "$GITHUB_ENV"
           /usr/bin/python3 .github/o01-private/private_receive.py "$private_dir/dn29.zip"
-      - name: Verify fresh rollback then run NP02-NP04 denials
+      - name: Verify fresh rollback and denials then NP05-NP06 SQL
         env:
           O01_RUN_DENIAL_TESTS: "1"
+          O01_RUN_SQL_TESTS: "1"
           O01_REPOSITORY_VISIBILITY: ${{ github.event.repository.visibility }}
           O01_REPOSITORY: ${{ github.repository }}
         shell: bash

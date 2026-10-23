@@ -10,7 +10,7 @@ test "$(mariadb --socket=/run/db.sock --user=root --batch --skip-column-names -e
 if test -f /run/http.pid && kill -0 "$(cat /run/http.pid)" 2>/dev/null; then
   echo 'STOP: quiesce the owned HTTP process before checkpoint'; exit 1
 fi
-rm -f /run/o01-rollback-proof.json
+rm -f /run/o01-rollback-proof.json /run/o01-denials-pass.json
 mkdir -p /backup/checkpoint
 test ! -e /work/wp/.o01-rollback-marker
 test "$(mariadb --socket=/run/db.sock --user=root --batch --skip-column-names -e 'SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA="o01_engineering" AND TABLE_NAME="o01_runtime_rollback_marker"')" = 0

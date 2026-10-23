@@ -42,7 +42,7 @@ jobs:
           image=o01-engineering-runtime:$GITHUB_RUN_ID
           image_size=$(docker image inspect "$image" --format '{{.Size}}')
           test "$((image_size + 384*1024*1024 + 128*1024*1024 + 16*1024*1024 + 8*1024*1024))" -le 1073741824
-          docker run -d --name "$container_name" --network none --read-only \
+          docker run -d --name "$container_name" --network none --ipc none --read-only \
             --user 10001:10001 --cap-drop ALL --security-opt no-new-privileges:true \
             --memory 768m --memory-swap 768m --cpus 1 --pids-limit 64 \
             --log-driver none --ulimit nofile=256:256 --ulimit core=0 \
@@ -54,7 +54,7 @@ jobs:
           python3 - <<'PY'
           import json
           c=json.load(open('inspected.json'))[0]; h=c['HostConfig']
-          assert h['NetworkMode']=='none' and h['ReadonlyRootfs']
+          assert h['NetworkMode']=='none' and h['IpcMode']=='none' and h['ReadonlyRootfs']
           assert h['Memory']==805306368 and h['MemorySwap']==805306368
           assert h['NanoCpus']==1000000000 and h['PidsLimit']==64
           assert h['CapDrop']==['ALL'] and 'no-new-privileges:true' in h['SecurityOpt']
@@ -135,6 +135,7 @@ jobs:
           assert pathlib.Path('/sys/fs/cgroup/cpu.max').read_text().strip()=='100000 100000'
           assert 'NoNewPrivs:\t1' in pathlib.Path('/proc/self/status').read_text()
           mounts=pathlib.Path('/proc/mounts').read_text().splitlines()
+          assert not any(x.split()[1]=='/dev/shm' for x in mounts)
           for name,maxbytes,maxinodes in [('/work',384*1024**2,16000),('/backup',128*1024**2,2000),('/tmp',16*1024**2,1000),('/run',8*1024**2,1000)]:
               row=next(x for x in mounts if x.split()[1]==name)
               assert row.split()[2]=='tmpfs'

@@ -60,7 +60,7 @@ jobs:
           (dest/"speaker_manifest.txt").write_text("\n".join(f"{name}: {model}" for name,model,_ in voices)+"\n")
           PY
           for file in output/[0-9]*.wav; do ffmpeg -hide_banner -loglevel error -y -i "$file" -ar 22050 -ac 1 "${file%.wav}_normalized.wav"; done
-          printf "file '%s'\n" output/*_normalized.wav > output/concat.txt
+          for file in output/*_normalized.wav; do printf "file '%s'\\n" "$(basename "$file")"; done > output/concat.txt
           ffmpeg -hide_banner -loglevel error -y -f concat -safe 0 -i output/concat.txt -codec:a libmp3lame -qscale:a 4 output/PeopleRun_VE01_six_voice.mp3
           test -s output/PeopleRun_VE01_six_voice.mp3
       - name: Upload generated listening artifact

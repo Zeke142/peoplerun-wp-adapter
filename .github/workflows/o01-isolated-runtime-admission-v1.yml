@@ -87,7 +87,7 @@ jobs:
             sleep 1
           done
           if ! mariadb-admin --socket=/run/db.sock --user=root ping >/dev/null; then tail -n 40 /work/db-error.log; exit 1; fi
-          php84 -c /work/php.ini <<'PHP'
+          php84 -c /work/php.ini -d max_execution_time=15 <<'PHP'
           <?php
           mysqli_report(MYSQLI_REPORT_ERROR|MYSQLI_REPORT_STRICT);
           $root=new mysqli('localhost','root','','',0,'/run/db.sock');
@@ -102,7 +102,7 @@ jobs:
           mkdir('/work/wp/wp-content/mu-plugins',0700,true);
           file_put_contents('/work/wp/wp-content/mu-plugins/o01-engineering-suppression.php',"<?php\nadd_filter('pre_wp_mail',static function(){return true;});\nadd_filter('pre_http_request',static function(){return new WP_Error('o01_no_egress','External requests denied');});\n");
           PHP
-          php84 -c /work/php.ini <<'PHP'
+          php84 -c /work/php.ini -d max_execution_time=15 <<'PHP'
           <?php
           define('WP_INSTALLING',true);
           require '/work/wp/wp-load.php';
@@ -112,7 +112,7 @@ jobs:
           update_option('home','http://127.0.0.1:8080');
           echo "PASS: real WordPress schema installed on MariaDB, no imported production data\n";
           PHP
-          php84 -c /work/php.ini -S 127.0.0.1:8080 -t /work/wp > /work/http.log 2>&1 &
+          php84 -c /work/php.ini -d max_execution_time=15 -S 127.0.0.1:8080 -t /work/wp > /work/http.log 2>&1 &
           SH
           docker exec -i "$container_name" sh -c 'cat > /tmp/initialize.sh' < initialize.sh
           timeout --kill-after=5 180 docker exec "$container_name" sh /tmp/initialize.sh
@@ -156,13 +156,13 @@ jobs:
           echo json_encode(['wordpress'=>$wp_version,'database'=>$wpdb->get_var('SELECT VERSION()'),'php'=>PHP_VERSION,'php_memory'=>ini_get('memory_limit'),'php_execution_seconds'=>ini_get('max_execution_time'),'dn29_loaded'=>false,'g3_enabled'=>false,'payment_processed'=>false],JSON_PRETTY_PRINT)."\n";
           PHP
           docker exec -i "$container_name" sh -c 'cat > /tmp/verify.php' < verify.php
-          timeout --kill-after=5 30 docker exec "$container_name" php84 -c /work/php.ini /tmp/verify.php
+          timeout --kill-after=5 30 docker exec "$container_name" php84 -c /work/php.ini -d max_execution_time=15 /tmp/verify.php
           for n in $(seq 1 10); do
             if docker exec "$container_name" curl -fsS --max-time 3 http://127.0.0.1:8080/ -o /tmp/home.html; then break; fi
             sleep 1
           done
           docker exec "$container_name" test -s /tmp/home.html
-          if docker exec "$container_name" php84 -c /work/php.ini -r 'str_repeat("a",140*1024*1024);' >/dev/null 2>&1; then
+          if docker exec "$container_name" php84 -c /work/php.ini -d max_execution_time=15 -r 'str_repeat("a",140*1024*1024);' >/dev/null 2>&1; then
             echo 'FAIL: PHP allocation exceeded 128M'; exit 1
           fi
           echo 'PASS: WordPress loopback HTTP, actual DB readback and PHP over-limit allocation rejected'

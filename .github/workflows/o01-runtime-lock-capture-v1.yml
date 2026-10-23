@@ -25,6 +25,7 @@ jobs:
           printf 'O01_BASE_PIN=%s\n' "$base"
           docker run --rm "$base" sh -ec '
            apk add --no-cache php84 php84-ctype php84-fileinfo php84-simplexml php84-mysqli php84-mbstring php84-curl php84-session php84-openssl php84-phar php84-tokenizer php84-xml php84-dom php84-iconv php84-zip mariadb mariadb-client curl tar python3 >/dev/null
+           apk update >/dev/null
            mkdir -p /tmp/apks
            apk fetch --recursive --output /tmp/apks php84 php84-ctype php84-fileinfo php84-simplexml php84-mysqli php84-mbstring php84-curl php84-session php84-openssl php84-phar php84-tokenizer php84-xml php84-dom php84-iconv php84-zip mariadb mariadb-client curl tar python3 >/dev/null
            cd /tmp/apks

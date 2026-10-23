@@ -1,7 +1,7 @@
 {
   "schema": "peoplerun.engineering.runner-lock.v1",
-  "candidate_revision": "c7cafeba9943e7c5bcaebd2cf66863500b3c00d3",
-  "candidate_lock_sha256": "b15239883a93b66f9e929cca9c77c94cfafa7e3c7cefac1aa038cf33063ec538",
+  "candidate_revision": "b7a26a7da805d3f29990515a9fd790c1f17095a7",
+  "candidate_lock_sha256": "11467ded5457cd9d8a57c9e254804df6bdc0119cbf32f38b78b0439654828e25",
   "base_helpers": {
     "runtime.lock.json": "a9bc369600d834e04aedf1e1812d5ce91f686045d3cf450a1f2754d80407caed",
     "fetch_locked.py": "82685766b7ce0ff8d1e598ac39d948cc4924d70a15d36bd7a71f852c4a54a4eb",

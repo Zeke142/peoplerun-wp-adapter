@@ -99,6 +99,12 @@ docker exec -i "$container_name" sh -c 'cat > /tmp/prepare-dn29.sh' < "$source_d
 docker exec "$container_name" sh -n /tmp/prepare-dn29.sh
 echo "PASS: prepared integration syntax only; no DN29 activation or fault phase invoked"
 timeout --kill-after=5 90 docker exec --env O01_CHECKPOINT_SOURCE=BASELINE_NO_DN29 "$container_name" sh /tmp/rollback.sh
+if timeout --kill-after=5 30 docker exec --env O01_ALLOW_FAULT_TESTS=1 "$container_name" php84 -c /work/php.ini -d max_execution_time=15 /tmp/dn29-no-payment.php faults > /dev/null 2>&1; then
+  echo 'FAIL: baseline proof unlocked DN29 fault phase'; exit 1
+fi
+docker exec "$container_name" grep -F 'DN29 rollback readback bound to this run' /work/php-error.log > /dev/null
+echo 'PASS: baseline-only rollback proof rejected at DN29 fault entry; no SQL fault test executed'
+
 docker exec "$container_name" sh -c 'php84 -c /work/php.ini -d max_execution_time=15 -S 127.0.0.1:8080 -t /work/wp > /work/http.log 2>&1 & echo $! > /run/http.pid'
 cat > verify.py <<'PY'
 import json,os,socket,subprocess,pathlib

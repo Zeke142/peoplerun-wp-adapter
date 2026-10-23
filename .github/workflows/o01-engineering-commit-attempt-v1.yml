@@ -1,0 +1,76 @@
+name: O01 one bounded engineering commit attempt
+on:
+  push:
+    branches: [o01-isolated-runtime-admission-v1]
+    paths: [.github/workflows/o01-engineering-commit-attempt-v1.yml]
+permissions:
+  contents: write
+concurrency:
+  group: o01-engineering-commit-attempt-v1
+  cancel-in-progress: false
+jobs:
+  engineering:
+    if: github.event.repository.visibility == 'public' && github.repository == 'Zeke142/peoplerun-wp-adapter' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Verify pinned wrapper and prerequisite sources
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$RUNNER_TEMP/o01-engineering-code" "$RUNNER_TEMP/o01-engineering-base"
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,urllib.request
+          rev='14d67c841ddbf3a3314fd6980d97e5a8fcb68d59'
+          root='https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/'+rev+'/.github/o01/'
+          dest=pathlib.Path(os.environ['RUNNER_TEMP'])/'o01-engineering-code'
+          base=dest.parent/'o01-engineering-base'
+          def get(remote,target,pin):
+              with urllib.request.urlopen(root+remote,timeout=20) as r: data=r.read(1000000)
+              assert hashlib.sha256(data).hexdigest()==pin,remote+' digest mismatch'
+              target.write_bytes(data)
+          get('engineering/runner.lock.json',dest/'runner.lock.json','3824a316f9b7218d368d01c767c6d684f1c54b4d595ac2ea717404016966263e')
+          lock=json.loads((dest/'runner.lock.json').read_text())
+          get('engineering/sources.lock.json',dest/'sources.lock.json',lock['candidate_lock_sha256'])
+          candidate=json.loads((dest/'sources.lock.json').read_text())
+          for name,pin in {**candidate['files'],**lock['runner_files']}.items():get('engineering/'+name,dest/name,pin)
+          with urllib.request.urlopen(root+'engineering/allowed-diff.json',timeout=20) as r: diff=r.read(1000000)
+          d=json.loads(diff);assert d['generated_sha256']==candidate['generated_sha256'] and all(d['inverse_checks'].values())
+          (dest/'allowed-diff.json').write_bytes(diff)
+          for name,pin in lock['base_helpers'].items():
+              remote=('private/' if name in ['admit-private.sh','private_receive.py','dn29-no-payment.php'] else '')+name
+              get(remote,base/name,pin)
+          print('PINNED_WRAPPER_SOURCE_ADMISSION_PASS revision='+rev)
+          PY
+          bash -n "$RUNNER_TEMP/o01-engineering-code/runner-wrapper.sh"
+          python3 -m py_compile "$RUNNER_TEMP/o01-engineering-code/runner_support.py"
+      - name: Fresh private binding then rollback denials and one EC01-EC10 attempt
+        shell: bash
+        env:
+          O01_ENGINEERING_RUNNER_EXECUTE: '1'
+          O01_REPOSITORY: ${{ github.repository }}
+          O01_REPOSITORY_VISIBILITY: ${{ github.event.repository.visibility }}
+          O01_HANDSHAKE_TOKEN: ${{ github.token }}
+        run: |
+          set -Eeuo pipefail
+          export O01_BASE_HELPER_DIR="$RUNNER_TEMP/o01-engineering-base"
+          export O01_ENGINEERING_OUTPUT_DIR="$RUNNER_TEMP/o01-engineering-result-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          bash "$RUNNER_TEMP/o01-engineering-code/runner-wrapper.sh"
+      - name: Preserve redacted evidence in job log and check remaining owned containers
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import json,os,pathlib,subprocess
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])
+          result=root/('o01-engineering-result-'+os.environ['GITHUB_RUN_ID']+'-'+os.environ['GITHUB_RUN_ATTEMPT'])
+          files=sorted(result.glob('*.json')) if result.exists() else []
+          assert sum(p.stat().st_size for p in files)<=2*1024*1024
+          for p in files:print('O01_REDACTED_EVIDENCE '+p.name+' '+json.dumps(json.loads(p.read_text()),separators=(',',':')))
+          prefix='o01-eng-'+os.environ['GITHUB_RUN_ID']+'-'+os.environ['GITHUB_RUN_ATTEMPT']+'-'
+          r=subprocess.run(['docker','ps','-a','--format','{{.Names}}'],check=True,capture_output=True,text=True)
+          remaining=[x for x in r.stdout.splitlines() if x.startswith(prefix)]
+          print('O01_OUTER_CONTAINER_READBACK '+json.dumps({'remaining':remaining}))
+          assert not remaining,'owned container cleanup not verified'
+          PY

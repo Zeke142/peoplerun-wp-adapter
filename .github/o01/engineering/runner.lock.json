@@ -1,0 +1,22 @@
+{
+  "schema": "peoplerun.engineering.runner-lock.v1",
+  "candidate_revision": "c7cafeba9943e7c5bcaebd2cf66863500b3c00d3",
+  "candidate_lock_sha256": "b15239883a93b66f9e929cca9c77c94cfafa7e3c7cefac1aa038cf33063ec538",
+  "base_helpers": {
+    "runtime.lock.json": "a9bc369600d834e04aedf1e1812d5ce91f686045d3cf450a1f2754d80407caed",
+    "fetch_locked.py": "82685766b7ce0ff8d1e598ac39d948cc4924d70a15d36bd7a71f852c4a54a4eb",
+    "rollback.sh": "d8537069d92bd71f8a22885048a1e79c75de75d9b46f1701d591dc4729105e01",
+    "stage_dn29.py": "ab98ba861581243195077d33c6e43891878b7b0602d00cb65d3032e2789f1c36",
+    "prepare-dn29.sh": "de076f7ef7884efa87ea83fe4d0c56ed19c5d107be4ae67fe5573aa422a1e06f",
+    "private_receive.py": "39ca8b808ca2ed85b8e2f8e5cf1feba15fad613bef95b4d4481797c48dc21d3e",
+    "dn29-no-payment.php": "e6ff96c76376b23f7c34336654a5ac4e1f23ae99cac8d868121544f55a6ec816",
+    "admit-private.sh": "0bbb0efd7737af90921cea1c231cf97925f49c40593cdf27251fe747344e1d98"
+  },
+  "runner_files": {
+    "runner-wrapper.sh": "131c64411185d71d475819667a9591e1d354979f4b0b4348cfbc8784898d06d5",
+    "runner_support.py": "4dd6115ef52d61f005dc137615f1c67b67375159f5b6e1ec469938664dd6aca7",
+    "test_runner.py": "c15243dec78b0c19092101587fc41b47d1946bcf32289391ddd474ad2d253222",
+    "RUNNER.md": "ad10f1c630f940bb01cb01d81b03d1fd17edf5009d11448b9638167bcf8a7b8e",
+    "runner-diff.json": "e56ae118abbbccb3aaca0ed9190a633e6a97a4b1d94118e3721f2ac1a53faade"
+  }
+}

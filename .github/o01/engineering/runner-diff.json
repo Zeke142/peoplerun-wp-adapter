@@ -1,0 +1,15 @@
+{
+  "schema": "peoplerun.engineering.runner-diff.v1",
+  "base_sha256": "0bbb0efd7737af90921cea1c231cf97925f49c40593cdf27251fe747344e1d98",
+  "wrapper_sha256": "131c64411185d71d475819667a9591e1d354979f4b0b4348cfbc8784898d06d5",
+  "inverse_base_match": true,
+  "allowed_changes": [
+    "explicit dormant execution gate and pinned preflight",
+    "fresh private receive owned by this invocation, token removal",
+    "owned lifecycle/evidence/cleanup trap and unique labelled container",
+    "replace optional old SQL/reader branches with post-denial engineering hook",
+    "footer says pending outer cleanup"
+  ],
+  "workflows_changed": false,
+  "runtime_validation": "UNEXECUTED"
+}

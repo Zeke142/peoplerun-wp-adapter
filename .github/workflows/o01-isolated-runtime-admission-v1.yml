@@ -1,4 +1,4 @@
-name: O01 isolated runtime admission
+name: SUPERSEDED - unpinned runtime discovery
 on:
   push:
     branches: [o01-isolated-runtime-admission-v1]
@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   admission:
-    if: github.event.repository.visibility == 'public' && github.repository == 'Zeke142/peoplerun-wp-adapter'
+    if: ${{ false }} # Superseded by pinned runtime/rollback workflow
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:

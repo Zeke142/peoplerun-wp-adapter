@@ -87,7 +87,7 @@ def hook(container,owner):
     binding=identity()['run_binding'];eng='/run/o01-eng-'+hashlib.sha256(binding.encode()).hexdigest()[:12]
     # Source hashes are checked by preflight and again by run.py; all writes are container-local.
     rc,log=bounded(c+['python3','/tmp/o01-engineering/generate.py','/tmp/dn29.zip',eng],15);check(rc==0,'private generation failed')
-    rc,log=bounded(['timeout','--kill-after=5','190','docker','exec','-e','O01_ENGINEERING_EXECUTE=1','-e','O01_ENGINEERING_DIR='+eng,container,'timeout','--kill-after=5','185','python3','/tmp/o01-engineering/run.py','--execute-engineering','--directory',eng],197)
+    rc,log=bounded(['timeout','--kill-after=5','190','docker','exec','-e','O01_ENGINEERING_EXECUTE=1','-e','O01_ENGINEERING_DIR='+eng,container,'timeout','-k','5','185','python3','/tmp/o01-engineering/run.py','--execute-engineering','--directory',eng],197)
     record('phase-exit.json',{'status':'EXIT_RECORDED','identity':identity(),'returncode':rc,'log_sha256':hashlib.sha256(log).hexdigest(),'log':log.decode(errors='replace')})
     check(rc==0,'engineering phase failed')
 

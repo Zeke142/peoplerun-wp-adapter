@@ -94,10 +94,12 @@ if($phase==='reader') {
         $expired=$c;$expired['expires_at_utc']=gmdate('Y-m-d\TH:i:s\Z',$now-1);$em=o01_manifest($expired);
         $wpdb->update($releases,['manifest_sha256'=>$em['manifest_sha256'],'manifest_json'=>o01_canon($em),'expires_at_utc'=>gmdate('Y-m-d H:i:s',$now-1)],['slug'=>$m['slug']]);
         file_get_contents($url,false,$ctx);require_check(str_contains(($http_response_header??[])[0]??'',' 410 '),'NP07 actual HTTP expired fixture denied');
-        $wpdb->update($releases,['render_html'=>'CORRUPTED_ENGINEERING_FIXTURE'],['slug'=>$m['slug']]);
+        $wpdb->update($releases,['manifest_sha256'=>$m['manifest_sha256'],'manifest_json'=>o01_canon($m),'expires_at_utc'=>gmdate('Y-m-d H:i:s',$now+600),'render_html'=>'CORRUPTED_ENGINEERING_FIXTURE'],['slug'=>$m['slug']]);
         require_check(o01_dn22_delivery($m['slug'],$now)['status']===503,'NP07 corrupt reader data denied');
+        file_get_contents($url,false,$ctx);require_check(str_contains(($http_response_header??[])[0]??'',' 503 '),'NP07 actual HTTP corrupt fixture denied');
         require_check((int)$wpdb->get_var("SELECT COUNT(*) FROM `$receipts`")===0,'NP07 no invented payment receipt');
     } finally {$wpdb->delete($releases,['slug'=>$m['slug']]);}
+    require_check(counts()===[0,0],'NP07 fixture cleanup readback');
     echo "O01_READER_FIXTURE_PHASE_PASS_NOT_PUBLICATION_PROOF\n";exit;
 }
 throw new RuntimeException('Unknown no-payment phase');

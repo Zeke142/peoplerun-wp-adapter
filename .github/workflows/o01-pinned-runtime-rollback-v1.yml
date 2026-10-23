@@ -34,7 +34,7 @@ jobs:
           curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/stage_dn29.py" -o .github/o01/stage_dn29.py
           printf '%s  %s\n' 'ab98ba861581243195077d33c6e43891878b7b0602d00cb65d3032e2789f1c36' '.github/o01/stage_dn29.py' | sha256sum -c -
           curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/dn29-no-payment.php" -o .github/o01/dn29-no-payment.php
-          printf '%s  %s\n' '56cd4ba63d12f7e4018b977b8ad2be19e75a830be63ece9155d453d78195801d' '.github/o01/dn29-no-payment.php' | sha256sum -c -
+          printf '%s  %s\n' '637f927aaffd86e26b4d653051a53af0d427ff7c18baac41ef914d9b48974f46' '.github/o01/dn29-no-payment.php' | sha256sum -c -
           curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/prepare-dn29.sh" -o .github/o01/prepare-dn29.sh
           printf '%s  %s\n' 'de076f7ef7884efa87ea83fe4d0c56ed19c5d107be4ae67fe5573aa422a1e06f' '.github/o01/prepare-dn29.sh' | sha256sum -c -
           bash .github/o01/admit-pinned.sh

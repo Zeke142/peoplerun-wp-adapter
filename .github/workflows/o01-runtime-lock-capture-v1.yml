@@ -1,0 +1,33 @@
+name: O01 capture dependency identities
+on:
+  push:
+    branches: [o01-isolated-runtime-admission-v1]
+    paths: [.github/workflows/o01-runtime-lock-capture-v1.yml]
+permissions: {}
+concurrency:
+  group: o01-runtime-lock-capture
+  cancel-in-progress: false
+jobs:
+  capture:
+    if: github.event.repository.visibility == 'public'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Capture signed Alpine package identities for pinning
+        env:
+          VISIBILITY: ${{ github.event.repository.visibility }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$VISIBILITY" = public
+          docker pull alpine:3.22 >/dev/null
+          base=$(docker image inspect alpine:3.22 --format '{{index .RepoDigests 0}}')
+          printf 'O01_BASE_PIN=%s\n' "$base"
+          docker run --rm "$base" sh -ec '
+           apk add --no-cache php84 php84-ctype php84-fileinfo php84-simplexml php84-mysqli php84-mbstring php84-curl php84-session php84-openssl php84-phar php84-tokenizer php84-xml php84-dom php84-iconv php84-zip mariadb mariadb-client curl tar python3 >/dev/null
+           mkdir -p /tmp/apks
+           apk fetch --recursive --output /tmp/apks php84 php84-ctype php84-fileinfo php84-simplexml php84-mysqli php84-mbstring php84-curl php84-session php84-openssl php84-phar php84-tokenizer php84-xml php84-dom php84-iconv php84-zip mariadb mariadb-client curl tar python3 >/dev/null
+           cd /tmp/apks
+           for file in *.apk; do printf "O01_APK_PIN="; sha256sum "$file"; done
+           printf "O01_INSTALLED_BEGIN\n"; apk info -v | sort; printf "O01_INSTALLED_END\n"
+          '

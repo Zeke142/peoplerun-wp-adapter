@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   engineering:
-    if: github.event.repository.visibility == 'public' && github.repository == 'Zeke142/peoplerun-wp-adapter' && github.run_attempt == 1
+    if: github.event.repository.visibility == 'public' && github.repository == 'Zeke142/peoplerun-wp-adapter' && github.run_attempt == 1 && github.run_number == 2
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:

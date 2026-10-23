@@ -1,0 +1,34 @@
+name: O01 pinned runtime and rollback admission
+on:
+  push:
+    branches: [o01-isolated-runtime-admission-v1]
+    paths: [.github/workflows/o01-pinned-runtime-rollback-v1.yml]
+permissions: {}
+concurrency:
+  group: o01-pinned-runtime-rollback-v1
+  cancel-in-progress: false
+jobs:
+  admission:
+    if: github.event.repository.visibility == 'public' && github.repository == 'Zeke142/peoplerun-wp-adapter'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Verify pinned dependencies and real paired rollback
+        env:
+          VISIBILITY: ${{ github.event.repository.visibility }}
+          O01_REPOSITORY_VISIBILITY: ${{ github.event.repository.visibility }}
+          O01_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$VISIBILITY" = public
+          mkdir -p .github/o01
+          curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/runtime.lock.json" -o .github/o01/runtime.lock.json
+          printf '%s  %s\n' 'a9bc369600d834e04aedf1e1812d5ce91f686045d3cf450a1f2754d80407caed' '.github/o01/runtime.lock.json' | sha256sum -c -
+          curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/fetch_locked.py" -o .github/o01/fetch_locked.py
+          printf '%s  %s\n' '82685766b7ce0ff8d1e598ac39d948cc4924d70a15d36bd7a71f852c4a54a4eb' '.github/o01/fetch_locked.py' | sha256sum -c -
+          curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/rollback.sh" -o .github/o01/rollback.sh
+          printf '%s  %s\n' '670b87d689e71a41b234664c846f2c42044e25bde86d0292b60a9532adc8489e' '.github/o01/rollback.sh' | sha256sum -c -
+          curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/admit-pinned.sh" -o .github/o01/admit-pinned.sh
+          printf '%s  %s\n' '22f3ac0d2e1d628a18e9ad618da8c7d7c03db221cd499f048d0fccf56bc20177' '.github/o01/admit-pinned.sh' | sha256sum -c -
+          bash .github/o01/admit-pinned.sh

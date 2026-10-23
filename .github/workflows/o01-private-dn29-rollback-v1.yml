@@ -1,0 +1,60 @@
+name: O01 private DN29 binding and source-bound rollback
+on:
+  push:
+    branches: [o01-isolated-runtime-admission-v1]
+    paths: [.github/workflows/o01-private-dn29-rollback-v1.yml]
+permissions:
+  contents: write
+concurrency:
+  group: o01-private-dn29-rollback-v1
+  cancel-in-progress: false
+jobs:
+  binding:
+    if: github.event.repository.visibility == 'public' && github.repository == 'Zeke142/peoplerun-wp-adapter'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Establish one-run public key and receive encrypted DN29
+        env:
+          VISIBILITY: ${{ github.event.repository.visibility }}
+          O01_HANDSHAKE_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$VISIBILITY" = public
+          mkdir -p .github/o01-private
+          curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/runtime.lock.json" -o .github/o01-private/runtime.lock.json
+          printf '%s  %s\n' 'a9bc369600d834e04aedf1e1812d5ce91f686045d3cf450a1f2754d80407caed' '.github/o01-private/runtime.lock.json' | sha256sum -c -
+          curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/fetch_locked.py" -o .github/o01-private/fetch_locked.py
+          printf '%s  %s\n' '82685766b7ce0ff8d1e598ac39d948cc4924d70a15d36bd7a71f852c4a54a4eb' '.github/o01-private/fetch_locked.py' | sha256sum -c -
+          curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/rollback.sh" -o .github/o01-private/rollback.sh
+          printf '%s  %s\n' 'd8537069d92bd71f8a22885048a1e79c75de75d9b46f1701d591dc4729105e01' '.github/o01-private/rollback.sh' | sha256sum -c -
+          curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/stage_dn29.py" -o .github/o01-private/stage_dn29.py
+          printf '%s  %s\n' 'ab98ba861581243195077d33c6e43891878b7b0602d00cb65d3032e2789f1c36' '.github/o01-private/stage_dn29.py' | sha256sum -c -
+          curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/prepare-dn29.sh" -o .github/o01-private/prepare-dn29.sh
+          printf '%s  %s\n' 'de076f7ef7884efa87ea83fe4d0c56ed19c5d107be4ae67fe5573aa422a1e06f' '.github/o01-private/prepare-dn29.sh' | sha256sum -c -
+          curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/private/private_receive.py" -o .github/o01-private/private_receive.py
+          printf '%s  %s\n' '39ca8b808ca2ed85b8e2f8e5cf1feba15fad613bef95b4d4481797c48dc21d3e' '.github/o01-private/private_receive.py' | sha256sum -c -
+          curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/private/admit-private.sh" -o .github/o01-private/admit-private.sh
+          printf '%s  %s\n' '1f31280ad5e8ca971ff5e9c680eac3dcc9a2f8f2697880ba90b448e75e8013d7' '.github/o01-private/admit-private.sh' | sha256sum -c -
+          curl --fail --silent --show-error --location "https://raw.githubusercontent.com/Zeke142/peoplerun-wp-adapter/${GITHUB_SHA}/.github/o01/private/dn29-no-payment.php" -o .github/o01-private/dn29-no-payment.php
+          printf '%s  %s\n' '6afbfcdc84b2b86f6a241c6489847d9b376880df3144fdc0e8d02b1276e47bf4' '.github/o01-private/dn29-no-payment.php' | sha256sum -c -
+          private_dir=$(mktemp -d "$RUNNER_TEMP/o01-private.XXXXXX")
+          chmod 700 "$private_dir"
+          printf 'O01_PRIVATE_DIRECTORY=%s\nO01_PRIVATE_ARCHIVE=%s/dn29.zip\n' "$private_dir" "$private_dir" >> "$GITHUB_ENV"
+          /usr/bin/python3 .github/o01-private/private_receive.py "$private_dir/dn29.zip"
+      - name: Verify pinned runtime and DN29 source-bound rollback only
+        env:
+          O01_REPOSITORY_VISIBILITY: ${{ github.event.repository.visibility }}
+          O01_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: bash .github/o01-private/admit-private.sh
+      - name: Remove owned private input workspace
+        if: always()
+        shell: bash
+        run: |
+          case "${O01_PRIVATE_DIRECTORY:-}" in
+            "$RUNNER_TEMP"/o01-private.*) rm -rf -- "$O01_PRIVATE_DIRECTORY" ;;
+            "") true ;;
+            *) exit 1 ;;
+          esac

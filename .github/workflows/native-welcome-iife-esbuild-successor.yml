@@ -1,0 +1,88 @@
+name: PeopleRun Native Welcome - IIFE Successor Compile Admission
+# DORMANT: local source-review candidate only. No GitHub commit or dispatch authorized.
+on:
+  workflow_dispatch:
+    inputs:
+      billing_guard_confirmation:
+        description: 'Exact verified account-specific zero-dollar usage blocking confirmation'
+        required: true
+        type: string
+      billing_checked_utc:
+        description: 'Actual ISO8601 UTC billing inspection, no more than 24 hours old'
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: peoplerun-native-welcome-iife-successor
+  cancel-in-progress: false
+jobs:
+  compile-successor:
+    if: github.repository == 'Zeke142/peoplerun-wp-adapter' && github.event.repository.private == false && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      CI: 'true'
+      npm_config_audit: 'false'
+      npm_config_fund: 'false'
+    steps:
+      - name: Validate billing attestation freshness (not independent billing proof)
+        shell: bash
+        env:
+          CONFIRM: ${{ inputs.billing_guard_confirmation }}
+          INSPECTED: ${{ inputs.billing_checked_utc }}
+        run: |
+          set -Eeuo pipefail
+          test "$CONFIRM" = VERIFIED_ZERO_DOLLAR_BLOCK_AND_STANDARD_PUBLIC_RUNNER
+          python3 - <<'PY'
+          import datetime,os
+          inspected=datetime.datetime.fromisoformat(os.environ['INSPECTED'].replace('Z','+00:00'))
+          assert inspected.tzinfo is not None
+          age=datetime.datetime.now(datetime.timezone.utc)-inspected
+          assert datetime.timedelta(0)<=age<=datetime.timedelta(hours=24)
+          print('ATTESTATION_FORMAT_AND_FRESHNESS_PASS; BILLING MUST BE INDEPENDENTLY VERIFIED BEFORE DISPATCH')
+          PY
+      - name: Checkout manual successor revision (read only)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Verify successor ZIP and safe extraction
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          SRC=native-welcome/successor/PeopleRun_Native_Welcome_IIFE_Repair_0.2.1.zip
+          test -f "$SRC" && test ! -L "$SRC"
+          echo '3f7b1f912f0d7334cac18eaaf129b66b4e7283a5d601b60885d326fd82948edc  native-welcome/successor/PeopleRun_Native_Welcome_IIFE_Repair_0.2.1.zip' | sha256sum -c -
+          python3 - <<'PY'
+          import os,pathlib,zipfile,hashlib
+          src=pathlib.Path('native-welcome/successor/PeopleRun_Native_Welcome_IIFE_Repair_0.2.1.zip')
+          dest=pathlib.Path(os.environ['RUNNER_TEMP'])/'peoplerun-iife'
+          with zipfile.ZipFile(src) as z:
+            for entry in z.infolist():
+              p=pathlib.PurePosixPath(entry.filename)
+              assert not p.is_absolute() and '..' not in p.parts and not entry.filename.startswith('/')
+              assert ((entry.external_attr>>16)&0o170000)!=0o120000, 'symlink forbidden'
+              assert entry.file_size <= 1_000_000
+            assert sum(x.file_size for x in z.infolist())<2_000_000
+            z.extractall(dest)
+          matches=list(dest.glob('*/package.json'))
+          assert len(matches)==1
+          root=matches[0].parent
+          accepted=root/'reference/accepted-blue-menu.html'
+          assert hashlib.sha256(accepted.read_bytes()).hexdigest()=='29a80f8c2efb21f565c4accabd5cd131e5fbedaede288ebe0c527d040d816b39'
+          (dest/'source_dir.txt').write_text(str(root.resolve()))
+          print('SUCCESSOR_SOURCE_AND_BLUE_HTML_PASS')
+          PY
+      - name: Official esbuild IIFE compilation and regression
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cd "$(cat "$RUNNER_TEMP/peoplerun-iife/source_dir.txt")"
+          npm install --no-audit --no-fund --package-lock=false --fetch-retries=1 --fetch-timeout=30000
+          npm ls @modelcontextprotocol/sdk @modelcontextprotocol/ext-apps zod esbuild --depth=0
+          node --check bridge/bridge-client.mjs
+          node --check scripts/build-widget.mjs
+          npm run build:widget
+          test -s dist/welcome-widget.html
+          npm test
+          echo 'SUCCESSOR_ESBUILD_IIFE_AND_LOCAL_TESTS_PASS; NO CHATGPT_HOST_ACCEPTANCE_CLAIM'

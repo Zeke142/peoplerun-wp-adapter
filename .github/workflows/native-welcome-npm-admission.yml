@@ -1,0 +1,99 @@
+name: PeopleRun Native Welcome - Isolated npm Admission
+
+# Dormant packet. Do not commit or execute without separate authorization.
+on:
+  workflow_dispatch:
+    inputs:
+      billing_guard_confirmation:
+        description: 'Exact text: VERIFIED_ZERO_DOLLAR_BLOCK_AND_STANDARD_PUBLIC_RUNNER'
+        required: true
+        type: string
+      billing_checked_utc:
+        description: 'UTC time of fresh account-specific billing-budget inspection (ISO8601, within 24 hours)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: peoplerun-native-welcome-npm-admission
+  cancel-in-progress: false
+
+jobs:
+  npm-admission:
+    if: github.repository == 'Zeke142/peoplerun-wp-adapter' && github.event.repository.private == false && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      CI: 'true'
+      npm_config_audit: 'false'
+      npm_config_fund: 'false'
+    steps:
+      - name: Validate manual billing attestation freshness
+        shell: bash
+        env:
+          CONFIRM: ${{ inputs.billing_guard_confirmation }}
+          INSPECTED: ${{ inputs.billing_checked_utc }}
+        run: |
+          set -Eeuo pipefail
+          test "$CONFIRM" = VERIFIED_ZERO_DOLLAR_BLOCK_AND_STANDARD_PUBLIC_RUNNER
+          python3 - <<'PY'
+          import datetime,os
+          s=os.environ['INSPECTED']
+          v=datetime.datetime.fromisoformat(s.replace('Z','+00:00'))
+          if v.tzinfo is None: raise ValueError('timezone required')
+          delta=datetime.datetime.now(datetime.timezone.utc)-v
+          assert datetime.timedelta(0)<=delta<=datetime.timedelta(hours=24), 'billing inspection not fresh'
+          print('ATTESTATION_FORMAT_AND_FRESHNESS_PASS; NOT INDEPENDENT BILLING PROOF')
+          PY
+      - name: Checkout exact workflow revision, read-only
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Verify exact candidate archive before package installation
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          SRC=native-welcome/probe/PeopleRun_Native_Welcome_MCP_Bridge_Candidate_0.2.0.zip
+          test -f "$SRC" && test ! -L "$SRC"
+          echo '78a8b15631219d670eaad5d5b5f849f4a053f715ea407d7304a5cbed91fc4bca  native-welcome/probe/PeopleRun_Native_Welcome_MCP_Bridge_Candidate_0.2.0.zip' | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/native-welcome-sdk"
+          python3 - <<'PY'
+          import pathlib,zipfile,os
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'native-welcome-sdk'
+          src=pathlib.Path('native-welcome/probe/PeopleRun_Native_Welcome_MCP_Bridge_Candidate_0.2.0.zip')
+          with zipfile.ZipFile(src) as z:
+            for i in z.infolist():
+              p=pathlib.PurePosixPath(i.filename)
+              assert not p.is_absolute() and '..' not in p.parts and not i.filename.startswith('/'), 'unsafe ZIP entry'
+              assert not ((i.external_attr>>16)&0o170000)==0o120000, 'ZIP symlink forbidden'
+              assert i.file_size<=1_000_000, 'large ZIP member'
+            assert sum(i.file_size for i in z.infolist())<2_000_000, 'ZIP expansion limit'
+            z.extractall(root)
+          found=list(root.glob('*/package.json'))
+          assert len(found)==1, 'expected exactly one package manifest'
+          (root/'admitted_source_dir.txt').write_text(str(found[0].parent.resolve()))
+          print('SOURCE_HASH_AND_EXTRACTION_PASS')
+          PY
+      - name: Prove official npm dependency access and build local widget
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cd "$(cat "$RUNNER_TEMP/native-welcome-sdk/admitted_source_dir.txt")"
+          test "$(node -p 'require("./package.json").version')" = 0.2.0
+          npm install --no-audit --no-fund --package-lock=false --fetch-retries=1 --fetch-timeout=30000
+          npm ls @modelcontextprotocol/sdk @modelcontextprotocol/ext-apps zod esbuild --depth=0
+          node --input-type=module - <<'JS'
+          import {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
+          import {Client} from '@modelcontextprotocol/sdk/client/index.js';
+          import {App} from '@modelcontextprotocol/ext-apps';
+          import {z} from 'zod';
+          import {build} from 'esbuild';
+          for(const item of [McpServer,Client,App,z,build]) if(!item)throw Error('missing official module export');
+          console.log('OFFICIAL_FOUR_PACKAGE_IMPORT_PASS');
+          JS
+          npm run build:widget
+          test -s dist/welcome-widget.html
+          npm test
+          echo 'NPM_ADMISSION_AND_LOCAL_BUNDLE_PASS; NO ACTUAL CHATGPT_IFRAME_CLAIM'

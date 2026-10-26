@@ -49,7 +49,7 @@ def preflight(base):
     check(os.environ.get('RUNNER_ENVIRONMENT')=='github-hosted' and os.environ.get('RUNNER_OS')=='Linux' and os.environ.get('RUNNER_ARCH')=='X64','standard hosted Linux runner required')
     check(bool(os.environ.get('O01_HANDSHAKE_TOKEN')),'one-run receive token required')
     check(os.environ.get('O01_RUN_SQL_TESTS','0')=='0' and os.environ.get('O01_RUN_READER_TESTS','0')=='0','unrelated phases must be off')
-    lock=json.loads((ROOT/'runner.lock.json').read_text());check(lock['candidate_revision']=='c7cafeba9943e7c5bcaebd2cf66863500b3c00d3','candidate revision')
+    lock=json.loads((ROOT/'runner.lock.json').read_text());check(lock['candidate_revision']=='b7a26a7da805d3f29990515a9fd790c1f17095a7','candidate revision')
     check(base.is_absolute() and not base.is_symlink(),'absolute helper directory required')
     for name,h in lock['base_helpers'].items():check(not (base/name).is_symlink() and sha(base/name)==h,'base helper drift: '+name)
     for name,h in lock['runner_files'].items():check(not (ROOT/name).is_symlink() and sha(ROOT/name)==h,'runner source drift: '+name)

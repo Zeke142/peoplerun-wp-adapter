@@ -1,0 +1,28 @@
+name: O01 fixed historical header probe
+on:
+  workflow_dispatch:
+permissions:
+  actions: read
+concurrency:
+  group: o01-header-probe
+  cancel-in-progress: false
+jobs:
+  header-probe:
+    if: github.repository == 'Zeke142/peoplerun-wp-adapter' && github.actor == 'Zeke142' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - name: Verify embedded probe bytes
+        shell: python
+        run: |
+          import base64, hashlib, pathlib
+          data = base64.b64decode('IiIiRml4ZWQgcmVhZC1vbmx5IGhlYWRlciBvYnNlcnZlci4gTmV2ZXIgZm9sbG93cyBvciBzZXJpYWxpemVzIExvY2F0aW9uIFVSTHMuIiIiCmltcG9ydCB1cmxsaWIucmVxdWVzdCx1cmxsaWIuZXJyb3IsdXJsbGliLnBhcnNlLHJlLGpzb24sb3MKRU5EUE9JTlQ9J2h0dHBzOi8vYXBpLmdpdGh1Yi5jb20vcmVwb3MvWmVrZTE0Mi9wZW9wbGVydW4td3AtYWRhcHRlci9hY3Rpb25zL2pvYnMvMTIwNzMyMjA4MTcxL2xvZ3MnCmNsYXNzIE5vUmVkaXJlY3QodXJsbGliLnJlcXVlc3QuSFRUUFJlZGlyZWN0SGFuZGxlcik6CiBkZWYgcmVkaXJlY3RfcmVxdWVzdChzZWxmLCphcmdzLCoqa3dhcmdzKTpyZXR1cm4gTm9uZQoKZGVmIHNhbml0aXplKHN0YXR1cyxsb2NhdGlvbik6CiByZXN1bHQ9eydzdGF0dXMnOnN0YXR1cywnaG9zdG5hbWUnOk5vbmV9CiBpZiBzdGF0dXMhPTMwMjpyZXR1cm4gcmVzdWx0CiB0cnk6CiAgaWYgbm90IGlzaW5zdGFuY2UobG9jYXRpb24sc3RyKSBvciBsZW4obG9jYXRpb24pPjE2Mzg0IG9yIGFueShvcmQoYyk8PTMyIG9yIG9yZChjKT49MTI3IGZvciBjIGluIGxvY2F0aW9uKSBvciAnXFwnIGluIGxvY2F0aW9uOnJldHVybiByZXN1bHQKICBwPXVybGxpYi5wYXJzZS51cmxzcGxpdChsb2NhdGlvbikKICBob3N0PXAuaG9zdG5hbWUKICBpZiBwLnNjaGVtZSE9J2h0dHBzJyBvciBwLnBvcnQgbm90IGluIChOb25lLDQ0Mykgb3IgcC51c2VybmFtZSBpcyBub3QgTm9uZSBvciBwLnBhc3N3b3JkIGlzIG5vdCBOb25lIG9yIHAuZnJhZ21lbnQ6cmV0dXJuIHJlc3VsdAogIGlmIG5vdCBob3N0IG9yIG5vdCByZS5mdWxsbWF0Y2gocidbYS16MC05XSsoPzpbLi1dW2EtejAtOV0rKSonLGhvc3QpOnJldHVybiByZXN1bHQKICAjIE9ic2VydmF0aW9uIG9ubHk6IG5ldmVyIHRyZWF0cyBhbiBvYnNlcnZlZCBob3N0bmFtZSBhcyB0cnVzdGVkLgogIHJlc3VsdFsnaG9zdG5hbWUnXT1ob3N0CiBleGNlcHQgKFZhbHVlRXJyb3IsVHlwZUVycm9yKTpwYXNzCiByZXR1cm4gcmVzdWx0CgpkZWYgb2JzZXJ2ZSh0b2tlbiwqLGVuZHBvaW50PUVORFBPSU5ULG9wZW5lcj1Ob25lKToKIGlmIGVuZHBvaW50IT1FTkRQT0lOVDpyZXR1cm4geydzdGF0dXMnOidERU5JRURfRU5EUE9JTlQnLCdob3N0bmFtZSc6Tm9uZX0KIGlmIG5vdCBpc2luc3RhbmNlKHRva2VuLHN0cikgb3Igbm90IHRva2VuLnN0cmlwKCk6cmV0dXJuIHsnc3RhdHVzJzonTUlTU0lOR19DUkVERU5USUFMJywnaG9zdG5hbWUnOk5vbmV9CiByZXE9dXJsbGliLnJlcXVlc3QuUmVxdWVzdChFTkRQT0lOVCxtZXRob2Q9J0dFVCcsaGVhZGVycz17J0F1dGhvcml6YXRpb24nOidCZWFyZXIgJyt0b2tlbiwnQWNjZXB0JzonYXBwbGljYXRpb24vdm5kLmdpdGh1Yitqc29uJywnWC1HaXRIdWItQXBpLVZlcnNpb24nOicyMDIyLTExLTI4J30pCiB0cnk6CiAgd2l0aCAob3BlbmVyIG9yIHVybGxpYi5yZXF1ZXN0LmJ1aWxkX29wZW5lcihOb1JlZGlyZWN0KCkpKS5vcGVuKHJlcSx0aW1lb3V0PTEwKSBhcyByZXNwb25zZToKICAgcmV0dXJuIHNhbml0aXplKHJlc3BvbnNlLnN0YXR1cyxOb25lKQogZXhjZXB0IHVybGxpYi5lcnJvci5IVFRQRXJyb3IgYXMgZToKICByZXN1bHQ9c2FuaXRpemUoZS5jb2RlLGUuaGVhZGVycy5nZXQoJ0xvY2F0aW9uJywnJykpO2UuY2xvc2UoKTtyZXR1cm4gcmVzdWx0CiBleGNlcHQgRXhjZXB0aW9uOnJldHVybiB7J3N0YXR1cyc6J1JFUVVFU1RfRkFJTEVEJywnaG9zdG5hbWUnOk5vbmV9CmlmIF9fbmFtZV9fPT0nX19tYWluX18nOnByaW50KGpzb24uZHVtcHMob2JzZXJ2ZShvcy5lbnZpcm9uLmdldCgnTzAxX0hFQURFUl9UT0tFTicsJycpKSkpCg==')
+          assert hashlib.sha256(data).hexdigest() == 'b22f7e58b06bd455886f99d7f83b055e0d2aeedccc915691fc3009bcc0fa0bcf'
+          pathlib.Path('probe.py').write_bytes(data)
+      - name: Observe status and hostname only
+        shell: bash
+        env:
+          O01_HEADER_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          timeout --kill-after=2 15 python3 probe.py

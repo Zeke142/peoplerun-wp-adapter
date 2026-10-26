@@ -11,6 +11,8 @@ import json
 import pathlib
 import re
 import sys
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
+from cryptography.hazmat.primitives.asymmetric import rsa
 from datetime import datetime, timezone
 
 FIELDS = ("repository", "run_id", "attempt", "source_commit",
@@ -35,6 +37,12 @@ def validate(obj, repository, run_id, attempt, source_commit, archive_sha256, no
         raise ValueError("public_key_encoding_invalid")
     if hashlib.sha256(public.encode()).hexdigest() != obj["public_key_sha256"]:
         raise ValueError("public_key_hash_mismatch")
+    try:
+        key = load_pem_public_key(public.encode("ascii"))
+    except (ValueError, TypeError, UnicodeError) as exc:
+        raise ValueError("public_key_parse_failed") from exc
+    if not isinstance(key, rsa.RSAPublicKey) or key.key_size < 2048 or key.key_size > 8192 or key.public_numbers().e != 65537:
+        raise ValueError("rsa_key_policy_denied")
     if type(obj["expires_in_seconds"]) is not int or obj["expires_in_seconds"] != 600:
         raise ValueError("window_mismatch")
     try:
@@ -44,7 +52,7 @@ def validate(obj, repository, run_id, attempt, source_commit, archive_sha256, no
     age = (now - created).total_seconds()
     if age < 0 or age >= 600:
         raise ValueError("handshake_expired_or_future")
-    return {"status": "OFFLINE_HANDSHAKE_FIELDS_PASS", "run_id": str(run_id),
+    return {"status": "OFFLINE_HANDSHAKE_RSA_PASS", "run_id": str(run_id),
             "attempt": str(attempt), "public_key_sha256": obj["public_key_sha256"]}
 
 def main():

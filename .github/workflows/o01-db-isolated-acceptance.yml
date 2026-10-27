@@ -1,0 +1,42 @@
+name: O01 disposable InnoDB acceptance (owner-approved only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: o01-isolated-db-acceptance
+  cancel-in-progress: false
+jobs:
+  mysql-acceptance:
+    if: github.repository == 'Zeke142/peoplerun-wp-adapter' && github.actor == 'Zeke142' && github.event_name == 'workflow_dispatch' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: local-only-root-test
+          MARIADB_DATABASE: o01_ephemeral
+          MARIADB_USER: o01_temp
+          MARIADB_PASSWORD: local-only-test-password
+        ports:
+          - 127.0.0.1:3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=3s --health-retries=15
+    steps:
+      - name: Checkout audited source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install PHP MariaDB driver
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends php-cli php-mysql
+          php -r 'if (!in_array("mysql", PDO::getAvailableDrivers(), true)) exit(2);'
+      - name: Run real InnoDB acceptance on loopback
+        env:
+          O01_DSN: mysql:host=127.0.0.1;port=3306;dbname=o01_ephemeral;charset=utf8mb4
+          O01_DB_USER: o01_temp
+          O01_DB_PASS: local-only-test-password
+        run: php o01-db-acceptance/real-innodb-acceptance.php

@@ -1,9 +1,8 @@
-# O01 — Disposable GitHub Actions InnoDB acceptance package
-2026-10-27; SOURCE-ONLY; no GitHub writes or workflow dispatch.
-
-Verified existing PDO driver archive SHA256 cd5995ee4c084fc7550ff4af4f790057051b93a52e85058a4af90d80b148dc8a [see note: authoritative full value from prior artifact is cd5995ee4c084fc7550ff4af4f790057051b93a52e85058a4af90d80b148dc8a].
-The package includes driver + previously built writer, reader and term sources. The new workflow creates disposable MariaDB with localhost port binding, installs php-mysql, uses per-job synthetic DB records, and calls the real PDO driver.
-
-No run executed: real InnoDB acceptance is unverified. Standard public repository runners are generally free, but account-level Actions permission / current billing and run admission remain unverified. Repository write and workflow_dispatch explicitly NOT authorized by this package. No access to real customers, production, or O01 secrets.
-
-Next single gated action: owner authorize a repo-scoped commit of this dedicated workflow and acceptance source, then one manual workflow_dispatch after confirming $0 account admission. A connected tool capable of the exact repo write/dispatch is additionally required; no write occurred.
+# O01 Disposable WordPress HTTP → InnoDB source-only admission
+2026-10-27. Input ZIP SHA-256 verified: 4627aa3b0493520bba7f964b35ce08a2b344dac8d2e262d18801854197f62508.
+Source-only; no GitHub write or workflow dispatch; real WordPress HTTP path NOT RUN.
+Proposed GitHub repo: Zeke142/peoplerun-wp-adapter, public; standard ubuntu-24.04, <=10 min, single owner-only workflow_dispatch.
+MariaDB 11.4 loopback service + php-mysql, WordPress 6.8.3 via WP-CLI, PHP built-in server 127.0.0.1:8765; ephemeral fixture-only synthetic receipt callback. No production authority or secrets.
+Acceptance script checks WordPress bootstrap+committed parent HTTP bytes, expiry, missing/private route denial, withdrawal.
+LIMITS: fixture-only receipt callback, synthetic data, not actual independent receipt authority; no installed production host; WordPress upstream dependency retrieved at runtime (network dependency). The test HTTP clock is injected from the local acceptance script for synthetic expiry tests only. Use no real credentials, receipts or customer identifiers.
+Source inventory/hash list in FILE_SHA256SUMS.txt. Prior real InnoDB success preserved; not rerun. Owner must separately approve one exact commit to main and one dispatch subject to $0 eligibility and code review.

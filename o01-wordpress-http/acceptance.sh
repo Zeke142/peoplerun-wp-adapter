@@ -17,6 +17,6 @@ code=$(get synthetic-page "$((start+1))"); test "$code" = 200; grep -Fq 'O01 SYN
 code=$(get synthetic-page "$end"); test "$code" = 410; echo 'PASS exact UTC expiry'
 code=$(get synthetic-page/private "$((start+1))"); test "$code" != 200; echo 'PASS private child denied without password'
 code=$(get absent-page "$((start+1))"); test "$code" != 200; echo 'PASS absent page denied'
-php -r '$d=new PDO("mysql:host=127.0.0.1;dbname=o01_ephemeral","o01_temp","local-only-test-password");$d->exec("UPDATE o01_temp_o01_paid_routes SET record_json=JSON_SET(record_json, '''$.state''', '''withdrawn''') WHERE slug='''synthetic-page'''");'
+php -r '$d=new PDO("mysql:host=127.0.0.1;dbname=o01_ephemeral","o01_temp","local-only-test-password",[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);$q=$d->prepare("UPDATE o01_temp_o01_paid_routes SET record_json=JSON_SET(record_json, ?, ?) WHERE slug=?");$q->execute(["$.state","withdrawn","synthetic-page"]);if($q->rowCount()!==1){throw new RuntimeException("withdrawal_fixture_row_missing");}'
 code=$(get synthetic-page "$((start+1))"); test "$code" = 410; echo 'PASS withdrawn parent denied'
 echo REAL_WORDPRESS_HTTP_INNODB_SYNTHETIC_ACCEPTANCE_COMPLETED

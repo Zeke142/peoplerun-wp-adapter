@@ -1,0 +1,62 @@
+{
+  "schema": "peoplerun.o01.v7.final-staging.v1",
+  "status": "NOT_ADMITTED",
+  "basis_zip_sha256": "5ea4343ee04eddce6de0949664ae0be267f1bede792b20fbb12922d9df421bac",
+  "evidence_class": {
+    "wordpress_archive": "owner-observed HTTPS stream hash",
+    "debian_image": "previously reported upstream OCI metadata, runner pull unverified",
+    "checkout": "previously verified GitHub tag commit",
+    "harness": "locally bytes verified"
+  },
+  "pins": {
+    "wordpress_sha256": "881e53a4681ff2cd911651b11cccdede5ae477ddf0765af5d6a1a8b219a1d835",
+    "debian_amd64_manifest_sha256": "sha256:e2914ec98e08b24b4cee3cefcb9f90dfb5519f8d215a2ccf0c9a49b10b6e43de",
+    "checkout_commit": "11d5960a326750d5838078e36cf38b85af677262",
+    "harness_sha256": "1197fe1a53d3ddb021fef8f6cfad3f78b3d2f0bc3612fbdd7d553a5b2859d4e3"
+  },
+  "repository": "Zeke142/peoplerun-wp-adapter",
+  "repository_mutated": false,
+  "workflow_dispatched": false,
+  "files": [
+    {
+      "path": ".github/workflows/o01-real-wordpress-v7-disposable.yml",
+      "sha256": "feb5c9b18a1a4e69094385e1580015bd72a29f48edc08bb47094a78bccd566cf",
+      "bytes": 2068
+    },
+    {
+      "path": "ADMISSION.md",
+      "sha256": "79f5344925ae6933fb62ba3500250786e23d0b5d83907fddae7c5a2fef8efe9d",
+      "bytes": 2712
+    },
+    {
+      "path": "LOCAL_CHECKS.json",
+      "sha256": "058a92309504a562b0850442c611db55264ff2963c8353042e5ff4718cd76f91",
+      "bytes": 240
+    },
+    {
+      "path": "acceptance-inputs/o01-v7.zip",
+      "sha256": "1197fe1a53d3ddb021fef8f6cfad3f78b3d2f0bc3612fbdd7d553a5b2859d4e3",
+      "bytes": 32499
+    },
+    {
+      "path": "o01-v7-runtime/Dockerfile",
+      "sha256": "f0e474b8d247f7d098ee71e96b91fecd5d5e755aa23f9476e7932bfbe1867926",
+      "bytes": 801
+    },
+    {
+      "path": "o01-v7-runtime/bootstrap-wp.php",
+      "sha256": "bcfa815211dc09c7d08c31629224497fbfb41ce24d80d7b5ec4cde39a262717c",
+      "bytes": 909
+    },
+    {
+      "path": "o01-v7-runtime/launch.sh",
+      "sha256": "055986db2cb210158c98d556e7365d73e451ccc6206f9a45bb7c0b222c8a0b21",
+      "bytes": 2944
+    },
+    {
+      "path": "o01-v7-runtime/runtime-pins.env",
+      "sha256": "982ea80d8d7348a01a5a09321936b80afe2404064482a3e01432574da27d150f",
+      "bytes": 233
+    }
+  ]
+}

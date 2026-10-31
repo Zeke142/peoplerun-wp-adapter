@@ -1,0 +1,10 @@
+{
+  "exact_harness_hash": true,
+  "checkout_pinned": true,
+  "manual_trigger": true,
+  "read_only_permissions": true,
+  "fails_without_pins": true,
+  "three_suites_called": true,
+  "launch.sh syntax": true,
+  "bootstrap_php_syntax": true
+}

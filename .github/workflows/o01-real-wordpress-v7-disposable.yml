@@ -1,0 +1,39 @@
+name: O01 v7 real WordPress disposable acceptance (candidate)
+'on':
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: o01-real-wordpress-v7
+  cancel-in-progress: false
+jobs:
+  acceptance:
+    if: github.repository == 'Zeke142/peoplerun-wp-adapter' && github.actor == 'Zeke142' && github.event_name == 'workflow_dispatch' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout without persistent credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Verify admission and exact transferred ZIP (fail closed)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f acceptance-inputs/o01-v7.zip || { echo 'NOT ADMITTED: pinned ZIP not committed'; exit 1; }
+          echo '1197fe1a53d3ddb021fef8f6cfad3f78b3d2f0bc3612fbdd7d553a5b2859d4e3  acceptance-inputs/o01-v7.zip' | sha256sum -c -
+          test -f o01-v7-runtime/Dockerfile || exit 1
+          test -f o01-v7-runtime/launch.sh || exit 1
+          test -f o01-v7-runtime/runtime-pins.env || { echo 'Missing externally verified runtime pins'; exit 1; }
+      - name: Build disposable Debian 13 environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          source o01-v7-runtime/runtime-pins.env
+          [[ "${DEBIAN_IMAGE_DIGEST:-}" =~ ^sha256:[a-f0-9]{64}$ ]] && [[ "${WORDPRESS_SHA256:-}" =~ ^[a-f0-9]{64}$ ]] && [[ "${WORDPRESS_URL:-}" == https://wordpress.org/wordpress-7.1.4.tar.gz ]]
+          docker build --build-arg DEBIAN_IMAGE_DIGEST="$DEBIAN_IMAGE_DIGEST" --build-arg WORDPRESS_SHA256="$WORDPRESS_SHA256" --build-arg WORDPRESS_URL="$WORDPRESS_URL" -t o01-v7-disposable -f o01-v7-runtime/Dockerfile .
+      - name: Run offline, loopback-only disposable integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --network none --security-opt no-new-privileges --tmpfs /tmp:rw,nosuid,nodev,mode=1777 o01-v7-disposable bash /opt/o01/launch.sh

@@ -7,7 +7,8 @@ define('WP_INSTALLING', true);
 require "$root/wp-load.php";
 if (DB_NAME!=='o01_ephemeral' || DB_HOST!=='127.0.0.1' ||
     $GLOBALS['wpdb']->prefix!=='o01_acceptance_' ||
-    home_url()!=='https://127.0.0.1:8443') exit(12);
+    !defined('WP_HOME') || WP_HOME!=='https://127.0.0.1:8443' ||
+    !defined('WP_SITEURL') || WP_SITEURL!=='https://127.0.0.1:8443') exit(12);
 require_once ABSPATH.'wp-admin/includes/upgrade.php';
 // Fresh disposable database is expected; reject pre-existing WordPress tables.
 $existing = $GLOBALS['wpdb']->get_var("SHOW TABLES LIKE 'o01_acceptance_%'");
@@ -16,4 +17,5 @@ $adminpass=getenv('O01_ADMIN_PASSWORD');
 if (!$adminpass || strlen($adminpass)<32) exit(14);
 $result=wp_install('O01 disposable test','o01_local_admin','o01@example.invalid',false,'',$adminpass,'en_US');
 if (empty($result['user_id']) || !is_blog_installed()) exit(15);
+if (home_url()!=='https://127.0.0.1:8443') exit(16);
 echo "DISPOSABLE_WORDPRESS_INSTALLED\n";

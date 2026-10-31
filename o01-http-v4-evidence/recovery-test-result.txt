@@ -1,0 +1,66 @@
+PASS actual WordPress CLI owner context (not HTTP login)
+PASS WordPress version 6.8.3 verified
+PASS actual G1/G2 generated identities session-before-write
+PASS fault attempt entered actual integrated authority session-before-write
+PASS lock-owning session really terminated session-before-write
+PASS terminated connection cannot start another publication session-before-write
+PASS session loss before writes fails closed
+PASS no receipt verifier reached after pre-write session loss
+PASS reconciliation blocks while another publisher still owns lock session-before-write
+PASS session loss rolls back route and receipt reservation session-before-write
+PASS fresh connection proves absent tuple before deliberate retry session-before-write
+PASS same original identifiers succeed after proven rollback session-before-write
+PASS exactly one receipt consumption after recovery session-before-write
+PASS repeated retry uses original receipt without duplicate verification session-before-write
+PASS repeat retry leaves receipt ledger unchanged session-before-write
+PASS shared lock released after session recovery revision:4
+PASS shared lock released after session recovery g2:url:integrated-session-before-write
+PASS actual G1/G2 generated identities session-at-commit
+PASS fault attempt entered actual integrated authority session-at-commit
+PASS lock-owning session really terminated session-at-commit
+PASS terminated connection cannot start another publication session-at-commit
+PASS fault reached COMMIT after receipt reservation session-at-commit
+PASS uncertain commit explicitly blocks blind retry session-at-commit
+PASS reconciliation blocks while another publisher still owns lock session-at-commit
+PASS session loss rolls back route and receipt reservation session-at-commit
+PASS fresh connection proves absent tuple before deliberate retry session-at-commit
+PASS same original identifiers succeed after proven rollback session-at-commit
+PASS exactly one receipt consumption after recovery session-at-commit
+PASS repeated retry uses original receipt without duplicate verification session-at-commit
+PASS repeat retry leaves receipt ledger unchanged session-at-commit
+PASS shared lock released after session recovery revision:7
+PASS shared lock released after session recovery g2:url:integrated-session-at-commit
+PASS actual G1/G2 generated identities lost-commit-ack
+PASS fault attempt entered actual integrated authority lost-commit-ack
+PASS lock-owning session really terminated lost-commit-ack
+PASS terminated connection cannot start another publication lost-commit-ack
+PASS fault reached COMMIT after receipt reservation lost-commit-ack
+PASS uncertain commit explicitly blocks blind retry lost-commit-ack
+PASS reconciliation blocks while another publisher still owns lock lost-commit-ack
+PASS real COMMIT persisted despite lost acknowledgement
+PASS fresh connection reconciles committed tuple and forbids retry
+PASS same request replays original receipt without authority or receipt reconsumption
+PASS lost-ack replay consumes no duplicate consent event or payment
+PASS one original publisher receipt after lost-ack recovery
+PASS expired committed result remains consumed and cannot be republished as retry
+PASS misbound recovery context denied owner
+PASS misbound recovery context denied request
+PASS misbound recovery context denied event
+PASS persisted route corruption cannot be reconciled or retried
+PASS read-only reconciliation succeeds after fixture restoration
+PASS shared lock released after session recovery revision:10
+PASS shared lock released after session recovery g2:url:integrated-lost-commit-ack
+PASS no genuine authority or credentials introduced
+SKIP genuine signed consent, provider payments and production admission; fixture callbacks remain synthetic
+SKIP packet-level TCP COMMIT acknowledgement drop, HTTP customer login and public delivery
+PASS created fixture post removed 4
+PASS created fixture post removed 5
+PASS created fixture post removed 6
+PASS created fixture post removed 7
+PASS created fixture post removed 8
+PASS created fixture post removed 9
+PASS created fixture post removed 10
+PASS created fixture post removed 11
+PASS created fixture post removed 12
+PASS WordPress baseline restored after recovery fixtures
+PASS all recovery fixture tables removed

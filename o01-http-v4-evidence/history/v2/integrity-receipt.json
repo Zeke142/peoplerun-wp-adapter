@@ -1,0 +1,19 @@
+{
+  "schema": "o01.local.integration.receipt.v2",
+  "evidence_class": "LOCAL_DISPOSABLE_ACTUAL_WORDPRESS_SYNTHETIC_RECEIPTS",
+  "recorded_at_utc": "2026-10-31T17:34:34.757085+00:00",
+  "source_commit": "450ce0ba110e34c1d6260919e23993e870526649",
+  "base_candidate_sha256": "e6a559aa045e70fc1bc6e6b25e1c605b089357c86f4cf4af931ff32bd62eb2d3",
+  "checks_pass": 76,
+  "skip_groups": 2,
+  "exit_code": 0,
+  "log_sha256": "e8d38e736172b454ac4e8a93b7efd34b6890331fada5c9429f125cf91dec66d9",
+  "source_git_blob_pins_verified": 45,
+  "loaded_g1_g2_match_pins": true,
+  "production_acceptance": "OPEN",
+  "genuine_payment": "UNVERIFIED",
+  "branch_updated": false,
+  "workflow_dispatched": false,
+  "production_changed": false,
+  "next": "Test lock-session loss and lost commit acknowledgement; reconcile uncertain commits using original request and receipt IDs."
+}

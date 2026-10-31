@@ -1,0 +1,19 @@
+{
+  "schema": "o01.local.recovery.receipt.v3",
+  "evidence_class": "LOCAL_DISPOSABLE_WORDPRESS_SYNTHETIC_RECEIPTS",
+  "recorded_at_utc": "2026-10-31T17:39:52.810166+00:00",
+  "input_zip_sha256": "076fafc9779ba4195a093e2fa22c9b3ef7d10889eb788c9d0faa45683b6bafbb",
+  "new_recovery_pass": 64,
+  "new_recovery_skip_groups": 2,
+  "recovery_exit_code": 0,
+  "regression_pass": 76,
+  "regression_exit_code": 0,
+  "prior_19_milestone": "PRESERVED_NOT_RERUN",
+  "recovery_log_sha256": "31b006285c1524bc20cf1f09eb3ac90c003ba319a906edd40e388f522b7ff98c",
+  "regression_log_sha256": "e8d38e736172b454ac4e8a93b7efd34b6890331fada5c9429f125cf91dec66d9",
+  "genuine_payments": "UNVERIFIED",
+  "packet_level_ack_loss": "NOT_TESTED_APPLICATION_BOUNDARY_INJECTION_ONLY",
+  "production_changed": false,
+  "spending": 0,
+  "host_closure": "UNVERIFIED"
+}

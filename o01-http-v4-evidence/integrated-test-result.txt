@@ -1,0 +1,78 @@
+PASS actual WordPress CLI owner context (not HTTP login)
+PASS WordPress version 6.8.3 verified
+PASS actual G1/G2 generated identities good
+PASS actual competing G1/G2 revision API denied by shared lock
+PASS actual competing G1/G2 reservation API denied by shared lock
+PASS transaction closed good
+PASS complete atomic publisher commits with persisted identity
+PASS receipt reservation and publisher receipt committed together
+PASS committed parent matches actual G1 exact bytes
+PASS route preserves actual G1/G2 identities
+PASS shared lock released revision:4
+PASS shared lock released g2:url:integrated-good
+PASS actual G1/G2 generated identities receipt-failure
+PASS transaction closed receipt-failure
+PASS complete publisher denies receipt-failure
+PASS no partial route ledger or receipt receipt-failure
+PASS failure occurred at publisher route/receipt write boundary
+PASS retry after receipt-write rollback succeeds with same IDs
+PASS rolled-back consent event and payment IDs reusable exactly once
+PASS shared lock released revision:7
+PASS shared lock released g2:url:integrated-receipt-failure
+PASS actual G1/G2 generated identities unconfigured
+PASS transaction closed unconfigured
+PASS complete publisher denies unconfigured
+PASS no partial route ledger or receipt unconfigured
+PASS shared lock released revision:10
+PASS shared lock released g2:url:integrated-unconfigured
+PASS actual G1/G2 generated identities mapping-revoked
+PASS transaction closed mapping-revoked
+PASS complete publisher denies mapping-revoked
+PASS no partial route ledger or receipt mapping-revoked
+PASS shared lock released revision:13
+PASS shared lock released g2:url:integrated-mapping-revoked
+PASS actual G1/G2 generated identities quote-change
+PASS transaction closed quote-change
+PASS complete publisher denies quote-change
+PASS no partial route ledger or receipt quote-change
+PASS shared lock released revision:16
+PASS shared lock released g2:url:integrated-quote-change
+PASS actual G1/G2 generated identities revision-change
+PASS transaction closed revision-change
+PASS complete publisher denies revision-change
+PASS no partial route ledger or receipt revision-change
+PASS shared lock released revision:19
+PASS shared lock released g2:url:integrated-revision-change
+PASS actual G1/G2 generated identities expiry-at-commit
+PASS transaction closed expiry-at-commit
+PASS complete publisher denies expiry-at-commit
+PASS no partial route ledger or receipt expiry-at-commit
+PASS shared lock released revision:23
+PASS shared lock released g2:url:integrated-expiry-at-commit
+PASS no genuine payment authority or credentials installed
+SKIP genuine signed consent/provider/payment/publication evidence; successful callbacks explicitly synthetic
+SKIP HTTP customer login, public HTTP serving, session-loss and commit-ack fault tests
+PASS created G1/G2 fixture post removed 4
+PASS created G1/G2 fixture post removed 5
+PASS created G1/G2 fixture post removed 6
+PASS created G1/G2 fixture post removed 7
+PASS created G1/G2 fixture post removed 8
+PASS created G1/G2 fixture post removed 9
+PASS created G1/G2 fixture post removed 10
+PASS created G1/G2 fixture post removed 11
+PASS created G1/G2 fixture post removed 12
+PASS created G1/G2 fixture post removed 13
+PASS created G1/G2 fixture post removed 14
+PASS created G1/G2 fixture post removed 15
+PASS created G1/G2 fixture post removed 16
+PASS created G1/G2 fixture post removed 17
+PASS created G1/G2 fixture post removed 18
+PASS created G1/G2 fixture post removed 19
+PASS created G1/G2 fixture post removed 20
+PASS created G1/G2 fixture post removed 21
+PASS created G1/G2 fixture post removed 22
+PASS created G1/G2 fixture post removed 23
+PASS created G1/G2 fixture post removed 24
+PASS created G1/G2 fixture post removed 25
+PASS WordPress post count restored to pre-fixture baseline
+PASS all candidate mapping ledger publisher approval tables removed

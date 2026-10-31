@@ -1,0 +1,84 @@
+PASS seven fixture sets created through actual G1/G2 APIs
+PASS real WordPress HTTP signon issued owner session cookie
+PASS second actual HTTP account signed in
+PASS anonymous nonce denied good
+PASS wrong owner denied good
+PASS authenticated owner receives real WordPress nonces good
+PASS HTTP owner preview exactly matches immutable G1 bytes good
+PASS unpublished page serves no bytes good
+PASS invalid approval nonce rejected good
+PASS actual HTTP cookie nonce verifier commits approval good
+PASS authenticated approval replay rejected good
+PASS invalid publication nonce rejected good
+PASS authenticated HTTP publication commits through recovery-tested publisher
+PASS anonymous HTTP delivery byte-identical to actual owner-approved HTTP preview
+PASS HTTP publication replay preserves original receipt and consumes no duplicate ledger entry
+PASS HTTP delivery denies tampered stored parent without leaking bytes
+PASS restored fixture serves original approved HTTP bytes
+PASS anonymous nonce denied content
+PASS wrong owner denied content
+PASS authenticated owner receives real WordPress nonces content
+PASS HTTP owner preview exactly matches immutable G1 bytes content
+PASS unpublished page serves no bytes content
+PASS invalid approval nonce rejected content
+PASS actual HTTP cookie nonce verifier commits approval content
+PASS authenticated approval replay rejected content
+PASS invalid publication nonce rejected content
+PASS publication invalidated after content change
+PASS invalidated approval cannot expose HTTP content content
+PASS anonymous nonce denied price
+PASS wrong owner denied price
+PASS authenticated owner receives real WordPress nonces price
+PASS HTTP owner preview exactly matches immutable G1 bytes price
+PASS unpublished page serves no bytes price
+PASS invalid approval nonce rejected price
+PASS actual HTTP cookie nonce verifier commits approval price
+PASS authenticated approval replay rejected price
+PASS invalid publication nonce rejected price
+PASS publication invalidated after price change
+PASS invalidated approval cannot expose HTTP content price
+PASS anonymous nonce denied term
+PASS wrong owner denied term
+PASS authenticated owner receives real WordPress nonces term
+PASS HTTP owner preview exactly matches immutable G1 bytes term
+PASS unpublished page serves no bytes term
+PASS invalid approval nonce rejected term
+PASS actual HTTP cookie nonce verifier commits approval term
+PASS authenticated approval replay rejected term
+PASS invalid publication nonce rejected term
+PASS publication invalidated after term change
+PASS invalidated approval cannot expose HTTP content term
+PASS anonymous nonce denied quote
+PASS wrong owner denied quote
+PASS authenticated owner receives real WordPress nonces quote
+PASS HTTP owner preview exactly matches immutable G1 bytes quote
+PASS unpublished page serves no bytes quote
+PASS invalid approval nonce rejected quote
+PASS actual HTTP cookie nonce verifier commits approval quote
+PASS authenticated approval replay rejected quote
+PASS invalid publication nonce rejected quote
+PASS publication invalidated after quote change
+PASS invalidated approval cannot expose HTTP content quote
+PASS anonymous nonce denied withdraw
+PASS wrong owner denied withdraw
+PASS authenticated owner receives real WordPress nonces withdraw
+PASS HTTP owner preview exactly matches immutable G1 bytes withdraw
+PASS unpublished page serves no bytes withdraw
+PASS invalid approval nonce rejected withdraw
+PASS actual HTTP cookie nonce verifier commits approval withdraw
+PASS authenticated approval replay rejected withdraw
+PASS invalid publication nonce rejected withdraw
+PASS publication invalidated after withdraw change
+PASS invalidated approval cannot expose HTTP content withdraw
+PASS anonymous nonce denied stale-approve
+PASS wrong owner denied stale-approve
+PASS authenticated owner receives real WordPress nonces stale-approve
+PASS HTTP owner preview exactly matches immutable G1 bytes stale-approve
+PASS unpublished page serves no bytes stale-approve
+PASS invalid approval nonce rejected stale-approve
+PASS preview superseded before approval cannot create approval claim
+PASS fresh DB has exactly one successful route receipt and synthetic payment consumption
+PASS failed stale-preview approval left no seventh claim
+SKIP genuine payment provider, signed external customer consent and production admission; positive payment/publication callbacks synthetic
+SKIP physical iPhone UI, optional subpages, TLS/public hosting and new transport-fault injection in this HTTP suite
+PASS all fixture posts users and candidate tables removed; baseline verified

@@ -1,0 +1,23 @@
+{
+  "schema": "o01.local.http.integration.receipt.v4",
+  "recorded_at_utc": "2026-10-31T17:47:06.737458+00:00",
+  "evidence_class": "ACTUAL_DISPOSABLE_WORDPRESS_HTTP_AUTH_SYNTHETIC_PAYMENT",
+  "http_assertions_pass": 82,
+  "skip_groups": 2,
+  "exit_code": 0,
+  "http_log_sha256": "51c85927303acefcca80a9340d53155db0d0fe552df65e963f2519d3e8fd0828",
+  "input_zip_sha256": "e0d2f8dac7b4c80bede0b58dc5912e8e170bfa0e7c56d51aade4cc960a0c33bf",
+  "prior_milestones_preserved": [
+    64,
+    76,
+    19
+  ],
+  "prior_recovery_classes_byte_identical": true,
+  "original_source_pins_verified": 45,
+  "production_acceptance": "OPEN",
+  "genuine_payment": "UNVERIFIED",
+  "public_hosting": "NOT_PERFORMED",
+  "workflow_dispatch": false,
+  "branch_mutation": false,
+  "spending": 0
+}

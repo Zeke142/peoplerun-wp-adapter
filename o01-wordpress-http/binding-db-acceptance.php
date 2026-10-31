@@ -96,6 +96,27 @@ try {
     'consent_sha256'=>$claim['approval_sha256'],'payment_sha256'=>hash('sha256','SYNTHETIC_PAYMENT'),'publication_sha256'=>hash('sha256','SYNTHETIC_PUBLICATION')];
    $r=O01PersistedRouteReader::resolve($slug,strtotime('2027-01-31T00:00:01Z'),static fn()=>$record,static fn()=>null,$authority);
    check_db($r['status']===200&&$r['body']===$html,'reader returns exact bytes from committed bound fixture');
+   // Real loopback HTTP transport, using the existing endpoint and committed DB row.
+   $server=proc_open([PHP_BINARY,'-S','127.0.0.1:8766',__DIR__.'/binding-http-read.php'],[0=>['pipe','r'],1=>['file','/tmp/o01-binding-http.out','a'],2=>['file','/tmp/o01-binding-http.err','a']],$serverPipes);
+   if(!is_resource($server))throw new RuntimeException('http_server_start_failed');fclose($serverPipes[0]);
+   try {
+    $response=false;$headers=[];
+    for($attempt=0;$attempt<40;$attempt++){
+     $response=@file_get_contents('http://127.0.0.1:8766/bound-good',false,stream_context_create(['http'=>['ignore_errors'=>true,'timeout'=>2]]));
+     $headers=$http_response_header??[];
+     if($response!==false)break;usleep(50000);
+    }
+    check_db(is_string($response)&&str_contains($headers[0]??'','200'),'actual loopback HTTP returns success');
+    check_db($response===$html&&strlen($response)===strlen($html)&&hash('sha256',$response)===$claim['html_sha256'],'actual HTTP bytes match approved fixture byte-for-byte');
+    $q=$d->prepare('SELECT record_json FROM o01_binding_o01_paid_routes WHERE slug=?');$q->execute([$slug]);$savedJson=$q->fetchColumn();
+    $tampered=json_decode($savedJson,true,512,JSON_THROW_ON_ERROR);$tampered['parent_html_b64']=base64_encode($html.' ');
+    $q=$d->prepare('UPDATE o01_binding_o01_paid_routes SET record_json=? WHERE slug=?');$q->execute([json_encode($tampered,JSON_THROW_ON_ERROR),$slug]);
+    try {
+     $denied=file_get_contents('http://127.0.0.1:8766/bound-good',false,stream_context_create(['http'=>['ignore_errors'=>true,'timeout'=>2]]));
+     $denialHeaders=$http_response_header??[];
+     check_db(str_contains($denialHeaders[0]??'','503')&&$denied==='','actual HTTP rejects tampered committed preview without serving bytes');
+    } finally {$q=$d->prepare('UPDATE o01_binding_o01_paid_routes SET record_json=? WHERE slug=?');$q->execute([$savedJson,$slug]);}
+   } finally {proc_terminate($server);proc_close($server);}
   }else{
    check_db(($result['result']??'')==='DENIED','publication denied for '.$case);
    check_db(route_count($fresh,$slug)===0&&request_count($fresh,$key)===0,'fresh DB confirms no partial route or receipt for '.$case);
@@ -109,6 +130,5 @@ try {
 }
 check_db((int)$fresh->query('SELECT COUNT(*) FROM o01_binding_o01_paid_routes')->fetchColumn()===0&&(int)$fresh->query('SELECT COUNT(*) FROM o01_binding_o01_paid_receipts')->fetchColumn()===0&&(int)$fresh->query('SELECT COUNT(*) FROM pr_o01_revision_authority')->fetchColumn()===0&&(int)$fresh->query('SELECT COUNT(*) FROM pr_o01_approval_claims')->fetchColumn()===0,'fixture cleanup readback all four tables empty');
 echo "SKIP actual WordPress authenticated approval in this harness\n";
-echo "SKIP real HTTP response byte equality\n";
 echo "SKIP canonical quote validation and live payment/publication receipt verification\n";
 echo "BINDING_REAL_PDO_SYNTHETIC_INTEGRATION_COMPLETED\n";

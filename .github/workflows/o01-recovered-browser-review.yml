@@ -1,0 +1,40 @@
+name: O01 recovered browser review (manual only)
+on:
+  workflow_dispatch:
+    inputs:
+      expected_commit:
+        description: Exact approved 40-character commit SHA
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  browser-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Require exact approved commit
+        env:
+          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+        run: |
+          [[ "$EXPECTED_COMMIT" =~ ^[a-f0-9]{40}$ ]]
+          test "$EXPECTED_COMMIT" = "$GITHUB_SHA"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned browser-test library
+        run: |
+          python3 -m venv "$RUNNER_TEMP/o01-browser-venv"
+          "$RUNNER_TEMP/o01-browser-venv/bin/python" -m pip install -r o01-browser-review/requirements.txt
+      - name: Install Chromium and system dependencies
+        run: '"$RUNNER_TEMP/o01-browser-venv/bin/python" -m playwright install --with-deps chromium'
+      - name: Test recovered preview with real WebCrypto
+        run: '"$RUNNER_TEMP/o01-browser-venv/bin/python" o01-browser-review/browser_check.py'
+      - name: Preserve bounded synthetic test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: o01-recovered-browser-review-${{ github.run_id }}
+          path: o01-browser-results/
+          if-no-files-found: warn
+          retention-days: 7

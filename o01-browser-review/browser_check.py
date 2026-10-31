@@ -61,6 +61,7 @@ def main():
                     assert actual == 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'
                     passed('real browser WebCrypto SHA-256 known-answer in loopback secure context')
                     def load_good():
+                        page.locator('#intakeFile').set_input_files([])
                         page.locator('#intakeFile').set_input_files(root/'synthetic_intake.json')
                         expect(page.locator('#renderStatus')).to_contain_text('INTAKE LOADED')
                         page.locator('#renderFile').set_input_files(root/'final-review.html')

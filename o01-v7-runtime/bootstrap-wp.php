@@ -3,6 +3,7 @@ declare(strict_types=1);
 if (getenv('O01_DISPOSABLE_ACCEPTANCE') !== 'YES') exit(10);
 $root='/srv/wordpress';
 if (!is_file("$root/wp-load.php")) exit(11);
+define('WP_INSTALLING', true);
 require "$root/wp-load.php";
 if (DB_NAME!=='o01_ephemeral' || DB_HOST!=='127.0.0.1' ||
     $GLOBALS['wpdb']->prefix!=='o01_acceptance_' ||

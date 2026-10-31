@@ -5,7 +5,6 @@ if(PHP_SAPI!=='cli'||getenv('O01_DISPOSABLE_ACCEPTANCE')!=='YES')exit(77);
 define('ABSPATH',__DIR__.'/');
 function add_filter(...$args):void {}
 require_once __DIR__.'/receipt-source/o01-receipt-admission-dn25.php';
-require_once __DIR__.'/quote-source/o01-core.php';
 require_once __DIR__.'/O01PublisherReceiptBinding.php';
 require_once __DIR__.'/o01-approval/recovered/o01_candidate_v11/caller_owned_approval.php';
 require_once __DIR__.'/AtomicPaidRoute.php';

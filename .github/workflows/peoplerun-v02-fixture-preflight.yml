@@ -1,0 +1,157 @@
+name: PeopleRun v0.2 isolated WP fixture preflight (no candidate)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_scope:
+        description: 'Type FIXTURE_ONLY to acknowledge no private PHP and no handoff testing'
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: peoplerun-v02-fixture-preflight
+  cancel-in-progress: false
+
+jobs:
+  fixture:
+    if: >-
+      github.repository == 'Zeke142/peoplerun-wp-adapter' &&
+      github.event.repository.visibility == 'public' &&
+      github.ref == 'refs/heads/main' &&
+      inputs.confirm_scope == 'FIXTURE_ONLY'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Build isolated pinned test image and prove WP + DB readiness
+        shell: bash
+        env:
+          EXPECTED_REPO: Zeke142/peoplerun-wp-adapter
+          EXPECTED_REF: refs/heads/main
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          test "$GITHUB_REPOSITORY" = "$EXPECTED_REPO"
+          test "$GITHUB_REF" = "$EXPECTED_REF"
+          # Historical known-good O01 baseline commit, not a floating branch or latest tag.
+          BASE_COMMIT=322d2f2bbe4b7be4edb69e35e538b31850d92e4a
+          root=$(mktemp -d)
+          cid=''
+          cleanup() {
+            result=$?
+            trap - EXIT INT TERM HUP
+            if [ -n "$cid" ]; then
+              docker rm -f "$cid" >/dev/null 2>&1 || true
+              if docker container inspect "$cid" >/dev/null 2>&1; then
+                echo 'FAIL: container still exists after cleanup' >&2
+                result=90
+              fi
+            fi
+            rm -rf -- "$root"
+            exit "$result"
+          }
+          trap cleanup EXIT
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+          trap 'exit 129' HUP
+          cd "$root"
+          base="https://raw.githubusercontent.com/${EXPECTED_REPO}/${BASE_COMMIT}/.github/o01"
+          curl -fsSL --max-time 30 "$base/runtime.lock.json" -o runtime.lock.json
+          echo 'a9bc369600d834e04aedf1e1812d5ce91f686045d3cf450a1f2754d80407caed  runtime.lock.json' | sha256sum -c -
+          curl -fsSL --max-time 30 "$base/fetch_locked.py" -o fetch_locked.py
+          echo '82685766b7ce0ff8d1e598ac39d948cc4924d70a15d36bd7a71f852c4a54a4eb  fetch_locked.py' | sha256sum -c -
+          # The fetch helper verifies image/dependency/WordPress archive pins.
+          python3 fetch_locked.py runtime.lock.json "$root"
+          docker build --quiet --platform linux/amd64 --network none --tag "pr-v02-fixture:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" .
+          image="pr-v02-fixture:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          image_id=$(docker image inspect "$image" --format '{{.Id}}')
+          [[ "$image_id" =~ ^sha256:[0-9a-f]{64}$ ]]
+          cid=$(docker create --network none --ipc none --read-only \
+            --user 10001:10001 --cap-drop ALL --security-opt no-new-privileges:true \
+            --memory 768m --memory-swap 768m --cpus 1 --pids-limit 64 \
+            --log-driver none --ulimit core=0 \
+            --label "peoplerun.scope=v02-fixture-only" \
+            --label "peoplerun.run=${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT}" \
+            --tmpfs /work:rw,nosuid,nodev,noexec,size=384m,nr_inodes=16000,uid=10001,gid=10001,mode=0700 \
+            --tmpfs /backup:rw,nosuid,nodev,noexec,size=128m,nr_inodes=2000,uid=10001,gid=10001,mode=0700 \
+            --tmpfs /tmp:rw,nosuid,nodev,noexec,size=16m,nr_inodes=1000,uid=10001,gid=10001,mode=0700 \
+            --tmpfs /run:rw,nosuid,nodev,noexec,size=8m,nr_inodes=1000,uid=10001,gid=10001,mode=0700 \
+            "$image_id" sleep 900)
+          docker start "$cid" >/dev/null
+          docker inspect "$cid" > inspect.json
+          IMAGE_ID="$image_id" RUN_BINDING="${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT}" python3 - <<'PY'
+          import json, os
+          c=json.load(open('inspect.json'))[0]; h=c['HostConfig']; conf=c['Config']
+          assert c['Image']==os.environ['IMAGE_ID']
+          assert c['State']['Running']
+          assert conf['Labels']['peoplerun.scope']=='v02-fixture-only'
+          assert conf['Labels']['peoplerun.run']==os.environ['RUN_BINDING']
+          assert str(conf['User'])=='10001:10001'
+          assert h['NetworkMode']=='none' and h['IpcMode']=='none' and h['ReadonlyRootfs']
+          assert not h['Privileged'] and not h.get('Binds') and not h.get('PortBindings')
+          assert not h.get('Devices') and not h.get('Mounts')
+          assert h['Memory']==805306368 and h['MemorySwap']==805306368
+          assert h['NanoCpus']==1000000000 and h['PidsLimit']==64
+          assert 'ALL' in h['CapDrop']
+          assert 'no-new-privileges:true' in h['SecurityOpt']
+          assert all(m['Type']=='tmpfs' for m in c['Mounts'])
+          print('PASS: exact image, same-run container, network none and isolation settings')
+          PY
+          # Initialize only an ephemeral local database and WordPress instance.
+          cat > init.sh <<'SH'
+          set -eu
+          umask 077
+          mkdir -p /work/wp /work/db
+          cp -R /opt/wp/. /work/wp/
+          cat > /work/php.ini <<'INI'
+          memory_limit=128M
+          max_execution_time=15
+          disable_functions=mail,exec,shell_exec,system,passthru,popen,proc_open
+          sendmail_path=/bin/false
+          display_errors=Off
+          log_errors=On
+          INI
+          mariadb-install-db --no-defaults --tmpdir=/tmp --datadir=/work/db --skip-test-db --auth-root-authentication-method=normal >/work/dbinit.log 2>&1
+          mariadbd --no-defaults --datadir=/work/db --socket=/run/db.sock --pid-file=/run/db.pid --skip-networking --innodb-buffer-pool-size=32M --max-connections=5 --performance-schema=OFF --tmpdir=/tmp --log-error=/work/dberror.log &
+          for i in $(seq 1 40); do mariadb-admin --socket=/run/db.sock --user=root ping >/dev/null 2>&1 && break; sleep 1; done
+          mariadb-admin --socket=/run/db.sock --user=root ping >/dev/null
+          php84 -c /work/php.ini <<'PHP'
+          <?php
+          mysqli_report(MYSQLI_REPORT_ERROR|MYSQLI_REPORT_STRICT);
+          $root = new mysqli('localhost','root','','',0,'/run/db.sock');
+          $pass = bin2hex(random_bytes(24));
+          $root->query('CREATE DATABASE pr_v02_fixture');
+          $root->query("CREATE USER 'pr_v02_fixture'@'localhost' IDENTIFIED BY '$pass'");
+          $root->query("GRANT ALL PRIVILEGES ON pr_v02_fixture.* TO 'pr_v02_fixture'@'localhost'");
+          $cfg="<?php\ndefine('DB_NAME','pr_v02_fixture');\ndefine('DB_USER','pr_v02_fixture');\ndefine('DB_PASSWORD','$pass');\ndefine('DB_HOST','localhost:/run/db.sock');\ndefine('DB_CHARSET','utf8mb4');\ndefine('DB_COLLATE','');\n";
+          foreach(['AUTH_KEY','SECURE_AUTH_KEY','LOGGED_IN_KEY','NONCE_KEY','AUTH_SALT','SECURE_AUTH_SALT','LOGGED_IN_SALT','NONCE_SALT'] as $key) $cfg.="define('$key','".bin2hex(random_bytes(32))."');\n";
+          $cfg.="define('WP_HTTP_BLOCK_EXTERNAL',true);\ndefine('DISALLOW_FILE_MODS',true);\ndefine('DISABLE_WP_CRON',true);\ndefine('AUTOMATIC_UPDATER_DISABLED',true);\n\$table_prefix='pv02_';\ndefine('ABSPATH',__DIR__.'/');\nrequire_once ABSPATH.'wp-settings.php';\n";
+          file_put_contents('/work/wp/wp-config.php',$cfg);
+          mkdir('/work/wp/wp-content/mu-plugins',0700,true);
+          file_put_contents('/work/wp/wp-content/mu-plugins/v02-block-egress.php',"<?php\nadd_filter('pre_wp_mail',static fn()=>true);\nadd_filter('pre_http_request',static fn()=>new WP_Error('offline','External requests denied'));\n");
+          PHP
+          php84 -c /work/php.ini <<'PHP'
+          <?php
+          define('WP_INSTALLING',true);
+          require '/work/wp/wp-load.php';
+          require_once ABSPATH.'wp-admin/includes/upgrade.php';
+          wp_install('Temporary v0.2 fixture','fixture_admin','fixture@example.invalid',true,'',bin2hex(random_bytes(32)));
+          update_option('siteurl','http://127.0.0.1:8080');
+          update_option('home','http://127.0.0.1:8080');
+          echo "PASS: disposable WordPress schema installed\n";
+          PHP
+          SH
+          docker exec -i "$cid" sh -c 'cat > /tmp/init.sh' < init.sh
+          timeout --kill-after=5 180 docker exec "$cid" sh /tmp/init.sh
+          docker exec "$cid" php84 -c /work/php.ini -r '
+          require "/work/wp/wp-load.php";
+          global $wpdb, $wp_version;
+          if (!is_blog_installed() || (int)$wpdb->get_var("SELECT 1") !== 1) exit(91);
+          if (get_option("siteurl") !== "http://127.0.0.1:8080") exit(92);
+          if (!defined("WP_HTTP_BLOCK_EXTERNAL") || !WP_HTTP_BLOCK_EXTERNAL) exit(93);
+          if (!is_wp_error(wp_remote_get("https://example.invalid"))) exit(94);
+          if (file_exists("/work/wp/wp-content/mu-plugins/peoplerun-handoff-private.php")) exit(95);
+          echo "PASS: WordPress ".$wp_version." PHP ".PHP_VERSION." local SQL + blocked egress; private handoff NOT loaded\n";
+          '
+          echo 'PASS: fixture-only preflight; no handoff candidate, production data, or release execution'
